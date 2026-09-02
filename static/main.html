@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор ЧО VMvare</title>
+<style>
+  :root{
+    --green: #49cc90;
+    --green-dark: #0f9d63;
+    --blue: #4990e2;
+    --blue-dark: #1f6fce;
+    --border: #d8dde3;
+    --bg: #fafafa;
+    --panel: #ffffff;
+    --text: #3b4151;
+    --muted: #6b7280;
+    --mono: 'Source Code Pro', 'SFMono-Regular', Consolas, Menlo, monospace;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Titillium Web','Segoe UI',Arial,sans-serif;
+  }
+  header{
+    background:#1b1b1b;
+    padding:18px 32px;
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+  }
+  header h1{
+    color:#fff;
+    font-size:22px;
+    margin:0;
+    font-weight:600;
+  }
+  header span{
+    color:#9aa0a6;
+    font-family:var(--mono);
+    font-size:13px;
+  }
+  main{
+    max-width:980px;
+    margin:28px auto 80px;
+    padding:0 20px;
+  }
+  .desc{
+    color:var(--muted);
+    font-size:14px;
+    margin-bottom:24px;
+    line-height:1.5;
+  }
+  .op{
+    border:1px solid var(--green);
+    border-radius:4px;
+    background:#f0fff8;
+    margin-bottom:0;
+    overflow:hidden;
+  }
+  .op-body{
+    background:#fff;
+    border-top:1px solid var(--green);
+    padding:20px 20px 8px;
+  }
+
+  .section-title{
+    font-size:13px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:#3b4151;
+    border-bottom:1px solid var(--border);
+    padding-bottom:6px;
+    margin:0 0 12px;
+  }
+
+  table.params{
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:22px;
+    font-size:13px;
+  }
+  table.params td{
+    padding:10px 8px;
+    vertical-align:top;
+    border-bottom:1px solid #eef0f2;
+  }
+  .p-name{
+    font-family:'Titillium Web','Segoe UI',Arial,sans-serif;
+    font-weight:600;
+    color:#3b4151;
+    width:220px;
+  }
+  .p-required{
+    color:#c0392b;
+    font-size:11px;
+    font-weight:400;
+    font-family:'Titillium Web',sans-serif;
+    display:block;
+    margin-top:2px;
+  }
+  .p-type{
+    color:var(--muted);
+    font-size:12px;
+    font-family:'Titillium Web','Segoe UI',Arial,sans-serif;
+    font-weight:400;
+    display:block;
+    margin-top:2px;
+  }
+  .p-input input,
+  .p-input select{
+    width:100%;
+    max-width:280px;
+    padding:7px 9px;
+    border:1px solid var(--border);
+    border-radius:4px;
+    font-family:var(--mono);
+    font-size:13px;
+    background:#fff;
+    color:var(--text);
+  }
+  .p-input input:focus,
+  .p-input select:focus{
+    outline:2px solid var(--blue);
+    outline-offset:1px;
+  }
+  .p-input input:invalid{
+    border-color:#c0392b;
+  }
+  .p-input select:disabled{
+    background:#f0f1f3;
+    color:var(--muted);
+    cursor:not-allowed;
+  }
+  .p-hint-inline{
+    display:block;
+    font-size:11px;
+    color:var(--muted);
+    margin-top:4px;
+  }
+
+  .execute-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:14px 0 20px;
+  }
+  button.execute{
+    background:var(--blue);
+    color:#fff;
+    border:none;
+    font-size:15px;
+    font-weight:600;
+    padding:10px 32px;
+    border-radius:4px;
+    cursor:pointer;
+    transition:background .15s;
+  }
+  button.execute:hover{ background:var(--blue-dark); }
+  button.execute:disabled{ background:#a9c6ec; cursor:default; }
+
+  .status-inline{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--muted);
+  }
+  .status-inline.ok{ color:var(--green-dark); }
+  .status-inline.err{ color:#c0392b; }
+
+  /* ---- results ---- */
+  #results-wrap{
+    margin-top:32px;
+  }
+  #results-summary{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:14px;
+  }
+  .empty-state{
+    border:1px dashed var(--border);
+    border-radius:6px;
+    padding:32px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .variant-card{
+    border:1px solid var(--border);
+    border-radius:6px;
+    background:#fff;
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .variant-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#f7f8fa;
+    padding:10px 16px;
+    border-bottom:1px solid var(--border);
+  }
+  .variant-head .vname{
+    font-weight:600;
+    font-size:14px;
+  }
+  .variant-head .vprice{
+    font-family:var(--mono);
+    font-weight:700;
+    font-size:14px;
+    color:var(--green-dark);
+  }
+  .variant-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+    gap:0;
+  }
+  .vfield{
+    padding:10px 16px;
+    border-bottom:1px solid #f0f1f3;
+    border-right:1px solid #f0f1f3;
+  }
+  .vfield .vlabel{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .vfield .vvalue{
+    font-size:13.5px;
+    font-family:var(--mono);
+    color:var(--text);
+    word-break:break-word;
+  }
+
+  pre.raw-json{
+    background:#282c34;
+    color:#abb2bf;
+    font-family:var(--mono);
+    font-size:12.5px;
+    padding:14px 16px;
+    border-radius:4px;
+    overflow-x:auto;
+    display:none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Калькулятор ЧО VMvare</h1>
+  <span>Оценка стоимости</span>
+</header>
+
+<main>
+  <p class="desc">
+    Введите нужные параметры запроса и получите варианты ЧО и стоимость.
+  </p>
+
+  <section class="op">
+    <div class="op-body">
+      <p class="section-title">Параметры</p>
+
+      <table class="params" id="params-table">
+        <!-- строки генерируются в JS ниже по описанию PARAMS -->
+      </table>
+
+      <div class="execute-row">
+        <button class="execute" id="execute-btn">Рассчитать</button>
+        <span class="status-inline" id="status-inline"></span>
+      </div>
+
+    </div>
+  </section>
+
+  <div id="results-wrap"></div>
+</main>
+
+<script>
+const OPTION_LABELS = {
+  works_main: { vsphere: "vSphere", vdi: "VDI" },
+  vsan_type: { osa: "OSA", esa: "ESA" },
+  cpu_vendor: { any: "Any", intel: "Intel", amd: "AMD" },
+  capacity_disk_type: { nvme: "NVME", ssd: "SSD" }
+};
+
+const PARAMS = [
+  { name:"vcpu", label:"vCPU", hint:"количество виртуальных ядер", type:"integer", required:true, min:1, value:390 },
+  { name:"vram", label:"vRAM, ГБ", hint:"объём виртуальной памяти", type:"integer", required:true, min:1, value:2000 },
+  { name:"vssd", label:"vSSD, ГБ", hint:"объём дискового пространства", type:"integer", required:true, min:1, value:22000 },
+  { name:"cpu_min_frequency", label:"Мин. частота CPU, МГц", type:"integer", required:true, min:1, value:3600 },
+  { name:"cpu_overcommit", label:"CPU overcommit", hint:"коэффициент переподписки CPU", type:"number", required:true, min:1, value:1, step:1 },
+  { name:"cpu_vendor", label:"Вендор CPU", type:"enum", required:true, options:["any","intel","amd"], value:"any" },
+  { name:"works_main", label:"Тип ЧО", type:"enum", required:true, options:["vsphere","vdi"], value:"vsphere" },
+  { name:"vsan_type", label:"Тип vSAN", type:"enum", required:true, options:["osa","esa"], value:"osa" },
+  { name:"capacity_disk_type", label:"Тип дисков", type:"enum", required:true, options:["nvme","ssd"], value:"nvme" },
+];
+
+const paramsTable = document.getElementById("params-table");
+
+PARAMS.forEach(p => {
+  const tr = document.createElement("tr");
+
+  const tdName = document.createElement("td");
+  tdName.className = "p-name";
+  tdName.innerHTML = `${p.label}${p.required ? '<span class="p-required">обязательное</span>' : ''}${p.hint ? `<span class="p-type">${p.hint}</span>` : ''}`;
+
+  const tdInput = document.createElement("td");
+  tdInput.className = "p-input";
+
+  let input;
+  if (p.type === "enum") {
+    input = document.createElement("select");
+    p.options.forEach(opt => {
+      const o = document.createElement("option");
+      o.value = opt;
+      o.textContent = (OPTION_LABELS[p.name] && OPTION_LABELS[p.name][opt]) || opt;
+      if (opt === p.value) o.selected = true;
+      input.appendChild(o);
+    });
+  } else {
+    input = document.createElement("input");
+    input.type = "number";
+    if (p.min !== undefined) input.min = p.min;
+    if (p.step !== undefined) input.step = p.step;
+    input.value = p.value;
+    input.required = p.required;
+  }
+  input.dataset.param = p.name;
+  input.id = "param-" + p.name;
+
+  tdInput.appendChild(input);
+
+  input.addEventListener("input", updateExecuteAvailability);
+  input.addEventListener("change", updateExecuteAvailability);
+
+  if (p.name === "capacity_disk_type") {
+    const note = document.createElement("span");
+    note.className = "p-hint-inline";
+    note.id = "capacity-disk-type-note";
+    note.textContent = "При выборе ESA фиксируется значение NVMe";
+    tdInput.appendChild(note);
+  }
+
+  tr.appendChild(tdName);
+  tr.appendChild(tdInput);
+  paramsTable.appendChild(tr);
+});
+
+function updateDiskTypeAvailability() {
+  const vsanSelect = document.getElementById("param-vsan_type");
+  const diskSelect = document.getElementById("param-capacity_disk_type");
+  if (!vsanSelect || !diskSelect) return;
+
+  const isEsa = vsanSelect.value === "esa";
+  diskSelect.disabled = isEsa;
+  if (isEsa) {
+    diskSelect.value = "nvme";
+  }
+}
+
+function updateExecuteAvailability() {
+  const btn = document.getElementById("execute-btn");
+  const allValid = PARAMS.every(p => {
+    const el = document.getElementById("param-" + p.name);
+    return el.checkValidity();
+  });
+  btn.disabled = !allValid;
+}
+
+document.getElementById("param-vsan_type").addEventListener("change", () => {
+  updateDiskTypeAvailability();
+  updateExecuteAvailability();
+});
+
+function collectParams() {
+  const values = {};
+  let valid = true;
+  PARAMS.forEach(p => {
+    const el = document.getElementById("param-" + p.name);
+    if (p.type !== "enum" && el.value === "") valid = false;
+    values[p.name] = el.value;
+  });
+  return { values, valid };
+}
+
+function buildQueryString(values) {
+  const usp = new URLSearchParams();
+  Object.entries(values).forEach(([k, v]) => usp.append(k, v));
+  return usp.toString();
+}
+
+// ---- подписи полей в карточках результата ----
+// Ключи должны совпадать с тем, что реально возвращает API (ConfigOption).
+// Если бэкенд вернёт поле, которого нет в этом словаре — на экране
+// покажется его исходное имя как есть, ничего не сломается.
+const RESULT_FIELD_LABELS = {
+  "Need hosts by CPU(n+1)": "Кол-во хостов (n+1)",
+  "AllFlash vSAN": "AllFlash vSAN",
+  "Failures to Tolerate": "Failures to Tolerate",
+  "CPU overcommit": "Переподписка",
+  "CPU": "Процессор",
+  "Server": "Серверная платформа",
+  "RAM": "Оперативная память",
+  "Esxi disk": "Диск под ОС",
+  "Cache disk": "Кэш-диск",
+  "Capacity disk": "Диски хранения",
+  "Network card": "Сетевая карта",
+  "HBA adapter": "HBA-адаптер",
+  "Admin main works": "Тип ЧО",
+  "vCPU available": "Доступно vCPU",
+  "vRAM available": "Доступно vRAM, ГБ",
+  "vSSD available": "Доступно vSSD, ГБ",
+};
+
+function fieldLabel(key) {
+  return RESULT_FIELD_LABELS[key] || key;
+}
+
+// ---- отображение поля Total price, Rub как акцент карточки, остальные — сеткой ----
+const CARD_TITLE_KEYS = ["CPU", "Server"];
+const PRICE_KEY = "Total price, Rub";
+
+function renderResults(data) {
+  const wrap = document.getElementById("results-wrap");
+  wrap.innerHTML = "";
+
+  const summary = document.createElement("div");
+  summary.id = "results-summary";
+
+  if (!Array.isArray(data) || data.length === 0) {
+    summary.textContent = "Получено вариантов: 0";
+    wrap.appendChild(summary);
+
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "Ни один вариант конфигурации не подошёл под заданные параметры. Попробуйте ослабить требования.";
+    wrap.appendChild(empty);
+    return;
+  }
+
+  summary.textContent = `Получено вариантов: ${data.length}`;
+  wrap.appendChild(summary);
+
+  data.forEach((item, idx) => {
+    const card = document.createElement("div");
+    card.className = "variant-card";
+
+    const head = document.createElement("div");
+    head.className = "variant-head";
+    const titleParts = CARD_TITLE_KEYS.filter(k => item[k]).map(k => item[k]);
+    const vname = document.createElement("span");
+    vname.className = "vname";
+    vname.textContent = `Вариант ${idx + 1}` + (titleParts.length ? " — " + titleParts.join(" / ") : "");
+    const vprice = document.createElement("span");
+    vprice.className = "vprice";
+    vprice.textContent = item[PRICE_KEY] ?? "";
+    head.appendChild(vname);
+    head.appendChild(vprice);
+    card.appendChild(head);
+
+    const grid = document.createElement("div");
+    grid.className = "variant-grid";
+    Object.entries(item).forEach(([key, val]) => {
+      if (key === PRICE_KEY) return;
+      const field = document.createElement("div");
+      field.className = "vfield";
+      field.innerHTML = `<span class="vlabel">${fieldLabel(key)}</span><span class="vvalue">${val}</span>`;
+      grid.appendChild(field);
+    });
+    card.appendChild(grid);
+    wrap.appendChild(card);
+  });
+}
+
+async function executeRequest() {
+  const statusEl = document.getElementById("status-inline");
+  const btn = document.getElementById("execute-btn");
+  const { values, valid } = collectParams();
+
+  if (!valid) {
+    statusEl.textContent = "Заполните все обязательные поля";
+    statusEl.className = "status-inline err";
+    return;
+  }
+
+  const base = "/config";
+  const qs = buildQueryString(values);
+  const url = `${base}${base.includes("?") ? "&" : "?"}${qs}`;
+
+  btn.disabled = true;
+  statusEl.textContent = "Выполняется запрос…";
+  statusEl.className = "status-inline";
+
+  try {
+    const resp = await fetch(url, { headers: { accept: "application/json" } });
+    const text = await resp.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = text; }
+
+    if (!resp.ok) {
+      statusEl.textContent = `Ошибка: ${resp.status} ${resp.statusText}`;
+      statusEl.className = "status-inline err";
+      const wrap = document.getElementById("results-wrap");
+      wrap.innerHTML = "";
+      const pre = document.createElement("pre");
+      pre.className = "raw-json";
+      pre.style.display = "block";
+      pre.textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+      wrap.appendChild(pre);
+      return;
+    }
+
+    statusEl.textContent = `200 OK`;
+    statusEl.className = "status-inline ok";
+    renderResults(data);
+  } catch (e) {
+    statusEl.textContent = "Не удалось выполнить запрос: " + e.message;
+    statusEl.className = "status-inline err";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById("execute-btn").addEventListener("click", executeRequest);
+</script>
+
+</body>
+</html>

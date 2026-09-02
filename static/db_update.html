@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Данные для расчета</title>
+  <!-- Подключаем шрифты, как в вашем калькуляторе -->
+  <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green: #49cc90;
+      --green-dark: #0f9d63;
+      --blue: #4990e2;
+      --blue-dark: #1f6fce;
+      --border: #d8dde3;
+      --bg: #fafafa;
+      --panel: #ffffff;
+      --text: #3b4151;
+      --muted: #6b7280;
+      --mono: 'Source Code Pro', 'SFMono-Regular', Consolas, Menlo, monospace;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Titillium Web', 'Segoe UI', Arial, sans-serif;
+    }
+    header {
+      background: #1b1b1b;
+      padding: 18px 32px;
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+    }
+    header h1 {
+      color: #fff;
+      font-size: 22px;
+      margin: 0;
+      font-weight: 600;
+    }
+    header span {
+      color: #9aa0a6;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    main {
+      max-width: 1200px;
+      margin: 28px auto 80px;
+      padding: 0 20px;
+    }
+    .desc {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .op {
+      border: 1px solid var(--green);
+      border-radius: 4px;
+      background: #f0fff8;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .op-body {
+      background: #fff;
+      border-top: 1px solid var(--green);
+      padding: 20px 20px 8px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #3b4151;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin: 0 0 12px;
+    }
+    .params-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+      font-size: 13px;
+    }
+    .params-table td {
+      padding: 10px 8px;
+      vertical-align: middle;
+      border-bottom: 1px solid #eef0f2;
+    }
+    .p-name {
+      font-weight: 600;
+      color: #3b4151;
+      width: 200px;
+    }
+    .p-required {
+      color: #c0392b;
+      font-size: 11px;
+      font-weight: 400;
+      display: block;
+      margin-top: 2px;
+    }
+    .p-type {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+      display: block;
+      margin-top: 2px;
+    }
+    .p-input select,
+    .p-input input {
+      width: 100%;
+      max-width: 280px;
+      padding: 7px 9px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 13px;
+      background: #fff;
+      color: var(--text);
+    }
+    .p-input select:focus,
+    .p-input input:focus {
+      outline: 2px solid var(--blue);
+      outline-offset: 1px;
+    }
+    .p-input select:disabled {
+      background: #f0f1f3;
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+    .execute-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0 20px;
+    }
+    .execute-row button {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 10px 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .execute-row button:hover {
+      background: var(--blue-dark);
+    }
+    .execute-row button:disabled {
+      background: #a9c6ec;
+      cursor: default;
+    }
+    .status-inline {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .status-inline.ok {
+      color: var(--green-dark);
+    }
+    .status-inline.err {
+      color: #c0392b;
+    }
+
+    /* ---- таблица данных ---- */
+    .table-wrapper {
+      margin-top: 16px;
+      overflow-x: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 0;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .data-table th {
+      background: #f7f8fa;
+      color: var(--text);
+      font-weight: 600;
+      padding: 10px 8px;
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #f0f1f3;
+      vertical-align: middle;
+    }
+    .data-table td input {
+      width: 100%;
+      min-width: 60px;
+      padding: 6px 4px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 13px;
+      background: transparent;
+      transition: border 0.2s;
+    }
+    .data-table td input:focus {
+      border-color: var(--blue);
+      outline: none;
+      background: #fefefe;
+    }
+    .data-table td input[readonly] {
+      background: #f0f1f3;
+      cursor: default;
+    }
+    .data-table tr.new-row td {
+      background: #fffceb;
+    }
+    .row-actions {
+      text-align: center;
+      white-space: nowrap;
+    }
+    .row-delete {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: #c0392b;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 5px 9px;
+      line-height: 1;
+    }
+    .row-delete:hover {
+      background: #fde8e8;
+      border-color: #c0392b;
+    }
+    .loading {
+      text-align: center;
+      color: var(--muted);
+      padding: 30px;
+      font-size: 14px;
+    }
+    .empty-state {
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .error {
+      color: #c0392b;
+      padding: 10px;
+      background: #fde8e8;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+
+    /* Toast – всплывающее уведомление */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: var(--green-dark);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-family: 'Titillium Web', sans-serif;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      max-width: 400px;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .toast.error {
+      background: #c0392b;
+    }
+
+    /* небольшая адаптивность */
+    @media (max-width: 700px) {
+      .params-table td {
+        display: block;
+        width: 100%;
+        padding: 6px 8px;
+      }
+      .p-input select,
+      .p-input input {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Данные для расчета</h1>
+  <span>просмотр и редактирование</span>
+</header>
+
+<main>
+  <p class="desc">
+    Выберите таблицу из базы данных, просматривайте и редактируйте все поля.
+    После внесения изменений нажмите «Обновить данные» для сохранения.
+  </p>
+
+  <section class="op">
+    <div class="op-body">
+      <p class="section-title">Управление таблицей</p>
+      <table class="params-table">
+        <tr>
+          <td class="p-name">Таблица</td>
+          <td class="p-input">
+            <select id="tableSelect">
+              <option value="">— загрузка списка —</option>
+            </select>
+            <span class="p-type">выберите таблицу для работы</span>
+          </td>
+        </tr>
+      </table>
+      <div class="execute-row">
+        <button id="addRowBtn" disabled>➕ Добавить строку</button>
+        <button id="updateBtn" disabled>💾 Сохранить изменения</button>
+        <span class="status-inline" id="statusInline"></span>
+      </div>
+    </div>
+  </section>
+
+  <div id="tableContainer" class="table-wrapper">
+    <div class="loading">Выберите таблицу для загрузки данных</div>
+  </div>
+
+  <!-- Toast уведомление -->
+  <div id="toast" class="toast"></div>
+</main>
+
+<script>
+  // ================== Конфигурация ==================
+  const API_BASE = '';  // относительный путь: всегда бьёт в тот же origin, с которого отдана страница
+
+  // ================== DOM-элементы ==================
+  const select = document.getElementById('tableSelect');
+  const container = document.getElementById('tableContainer');
+  const addRowBtn = document.getElementById('addRowBtn');
+  const updateBtn = document.getElementById('updateBtn');
+  const statusInline = document.getElementById('statusInline');
+  const toast = document.getElementById('toast');
+
+  let currentTableName = '';
+  let currentColumns = [];   // [{name, type, isPrimary?}]
+  let currentData = [];      // массив объектов; черновики новых строк помечены _isNew: true, _tempKey: string
+  let newRowCounter = 0;
+
+  // ================== Вспомогательные функции ==================
+  function showStatus(msg, isError = false) {
+    statusInline.textContent = msg;
+    statusInline.className = 'status-inline' + (isError ? ' err' : '');
+  }
+
+  function showToast(msg, isError = false) {
+    toast.textContent = msg;
+    toast.className = 'toast' + (isError ? ' error' : '');
+    toast.classList.add('show');
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+
+  async function fetchJSON(url, options = {}) {
+    const response = await fetch(url, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+    });
+    if (!response.ok) {
+      let errorMsg = `Ошибка ${response.status}`;
+      try {
+        const errData = await response.json();
+        if (errData.detail) errorMsg += `: ${errData.detail}`;
+      } catch (_) { /* ignore */ }
+      throw new Error(errorMsg);
+    }
+    return response.json();
+  }
+
+  // Простое экранирование для HTML
+  function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+  }
+
+  // ================== Загрузка списка таблиц ==================
+  async function loadTableList() {
+    try {
+      showStatus('Загрузка списка таблиц...');
+      const tables = await fetchJSON(`${API_BASE}/tables`);
+      select.innerHTML = '<option value="">— выберите таблицу —</option>';
+      tables.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      });
+      showStatus(`Найдено ${tables.length} таблиц`);
+    } catch (err) {
+      showStatus('Не удалось загрузить список таблиц', true);
+      showToast('Ошибка загрузки списка: ' + err.message, true);
+      console.error(err);
+    }
+  }
+
+  // ================== Загрузка данных таблицы ==================
+  async function loadTableData(tableName) {
+    if (!tableName) {
+      container.innerHTML = '<div class="loading">Выберите таблицу</div>';
+      updateBtn.disabled = true;
+      addRowBtn.disabled = true;
+      currentTableName = '';
+      currentColumns = [];
+      currentData = [];
+      return;
+    }
+
+    try {
+      showStatus(`Загрузка таблицы "${tableName}"...`);
+      container.innerHTML = '<div class="loading">⏳ Загрузка данных...</div>';
+      updateBtn.disabled = true;
+      addRowBtn.disabled = true;
+
+      const result = await fetchJSON(`${API_BASE}/table/${tableName}`);
+      // Ожидаем: { columns: [{name, type, isPrimary?}], rows: [object] }
+      currentColumns = result.columns || [];
+      currentData = result.rows || [];
+      currentTableName = tableName;
+
+      renderTable();
+      showStatus(`Таблица "${tableName}" загружена (${currentData.length} строк)`);
+      updateBtn.disabled = false;
+      addRowBtn.disabled = !currentColumns.length;
+    } catch (err) {
+      container.innerHTML = `<div class="error">❌ Ошибка загрузки: ${err.message}</div>`;
+      showStatus('Ошибка загрузки таблицы', true);
+      showToast('Ошибка загрузки: ' + err.message, true);
+      updateBtn.disabled = true;
+      addRowBtn.disabled = true;
+      console.error(err);
+    }
+  }
+
+  // Первичный ключ таблицы: колонка "id" или помеченная isPrimary
+  function getPkColumn() {
+    return currentColumns.find(col => col.name.toLowerCase() === 'id' || col.isPrimary === true) || null;
+  }
+
+  // Является ли PK "автоматическим" (rowid / INTEGER PRIMARY KEY) — тогда
+  // при создании строки поле не запрашивается у пользователя. Для PK
+  // другого типа (например TEXT) сервер требует значение явно.
+  function isPkAuto(pkColumn) {
+    if (!pkColumn) return true;
+    if (pkColumn.name.toLowerCase() === 'id') return true;
+    return (pkColumn.type || '').toLowerCase().includes('int');
+  }
+
+  // ================== Отрисовка редактируемой таблицы ==================
+  function renderTable() {
+    if (!currentColumns.length) {
+      container.innerHTML = '<div class="empty-state">Таблица не содержит столбцов</div>';
+      return;
+    }
+
+    const pkColumn = getPkColumn();
+    const pkAuto = isPkAuto(pkColumn);
+
+    let html = '<table class="data-table"><thead><tr>';
+    currentColumns.forEach(col => {
+      html += `<th>${escapeHtml(col.name)}${col.isPrimary ? ' 🔑' : ''}</th>`;
+    });
+    html += '<th class="row-actions">Действия</th>';
+    html += '</tr></thead><tbody>';
+
+    if (!currentData.length) {
+      html += `<tr><td colspan="${currentColumns.length + 1}" class="empty-state">
+        В таблице нет записей — нажмите «➕ Добавить строку», чтобы создать первую
+      </td></tr>`;
+    }
+
+    currentData.forEach((row, rowIdx) => {
+      const isNew = row._isNew === true;
+      html += `<tr${isNew ? ' class="new-row"' : ''}>`;
+      currentColumns.forEach((col) => {
+        const value = row[col.name] !== undefined ? row[col.name] : '';
+        const isPKCol = col.isPrimary === true || col.name.toLowerCase() === 'id';
+        // Для новой строки поле PK редактируется только если оно не авто-генерируемое
+        const readonly = isPKCol && (!isNew || pkAuto);
+
+        let inputType = 'text';
+        const typeLower = (col.type || '').toLowerCase();
+        const isBool = typeLower.includes('bool');
+        if (isBool) {
+          inputType = 'checkbox';
+        } else if (typeLower.includes('int') || typeLower.includes('float') || typeLower.includes('double') || typeLower.includes('decimal')) {
+          inputType = 'number';
+        } else if (typeLower.includes('date') && !typeLower.includes('time')) {
+          inputType = 'date';
+        } else if (typeLower.includes('datetime')) {
+          inputType = 'datetime-local';
+        } else if (typeLower.includes('time')) {
+          inputType = 'time';
+        }
+
+        const placeholder = (isNew && isPKCol && readonly) ? 'будет создан автоматически' : '';
+
+        if (isBool) {
+          const checked = ['1', 'true', 'on', 'yes'].includes(String(value).toLowerCase());
+          html += `<td>
+            <input type="checkbox"
+                   ${checked ? 'checked' : ''}
+                   data-row-key="${rowIdx}"
+                   data-col-name="${escapeHtml(col.name)}"
+                   data-bool="1"
+                   ${readonly ? 'disabled' : ''}
+            >
+          </td>`;
+        } else {
+          html += `<td>
+            <input type="${readonly ? 'text' : inputType}"
+                   value="${escapeHtml(String(value))}"
+                   placeholder="${escapeHtml(placeholder)}"
+                   data-row-key="${rowIdx}"
+                   data-col-name="${escapeHtml(col.name)}"
+                   ${readonly ? 'readonly' : ''}
+                   ${(!readonly && inputType === 'number') ? 'step="any"' : ''}
+            >
+          </td>`;
+        }
+      });
+      html += `<td class="row-actions">
+        <button type="button" class="row-delete" data-row-key="${rowIdx}" title="Удалить строку">🗑</button>
+      </td>`;
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  // ================== Добавление черновика новой строки ==================
+  function addRow() {
+    if (!currentTableName || !currentColumns.length) return;
+
+    const draft = { _isNew: true, _tempKey: `new-${++newRowCounter}` };
+    currentColumns.forEach(col => {
+      const isBool = (col.type || '').toLowerCase().includes('bool');
+      draft[col.name] = isBool ? '1' : '';
+    });
+    currentData.push(draft);
+    renderTable();
+    showStatus('Заполните новую строку и нажмите «Сохранить изменения»');
+  }
+
+  // ================== Удаление строки ==================
+  async function deleteRow(rowIdx) {
+    const row = currentData[rowIdx];
+    if (!row) return;
+
+    // Черновик, ещё не сохранённый в БД — просто убираем локально
+    if (row._isNew) {
+      currentData.splice(rowIdx, 1);
+      renderTable();
+      return;
+    }
+
+    const pkColumn = getPkColumn();
+    if (!pkColumn) {
+      showToast('Не удалось определить ключ строки для удаления', true);
+      return;
+    }
+    const pkValue = row[pkColumn.name];
+
+    if (!window.confirm('Удалить эту строку из БД? Действие необратимо.')) {
+      return;
+    }
+
+    try {
+      showStatus('Удаление строки...');
+      const result = await fetchJSON(
+        `${API_BASE}/table/${currentTableName}/rows/${encodeURIComponent(pkValue)}`,
+        { method: 'DELETE' }
+      );
+      if (result.deleted) {
+        showToast('🗑 Строка удалена');
+      } else {
+        showToast('Строка не найдена на сервере (уже удалена?)', true);
+      }
+      await loadTableData(currentTableName);
+    } catch (err) {
+      showToast('❌ Ошибка удаления: ' + err.message, true);
+      showStatus('Ошибка удаления', true);
+      console.error(err);
+    }
+  }
+
+  // ================== Сбор данных из таблицы ==================
+  // Возвращает массив { rowIdx, values } — по одному элементу на видимую строку
+  function gatherTableData() {
+    const inputs = container.querySelectorAll('input');
+    const rowMap = new Map();
+
+    inputs.forEach(input => {
+      const rowIdx = Number(input.dataset.rowKey);
+      const colName = input.dataset.colName;
+      const value = input.dataset.bool === '1' ? (input.checked ? '1' : '0') : input.value;
+      if (!rowMap.has(rowIdx)) {
+        rowMap.set(rowIdx, {});
+      }
+      rowMap.get(rowIdx)[colName] = value;
+    });
+
+    return Array.from(rowMap.entries()).map(([rowIdx, values]) => ({ rowIdx, values }));
+  }
+
+  // ================== Сохранение изменений (обновления + новые строки) ==================
+  async function saveAll() {
+    if (!currentTableName) {
+      showToast('Таблица не выбрана', true);
+      return;
+    }
+
+    const gathered = gatherTableData();
+    if (gathered.length === 0) {
+      showToast('Нет данных для отправки', true);
+      return;
+    }
+
+    const toUpdate = [];
+    const toCreate = [];
+    gathered.forEach(({ rowIdx, values }) => {
+      const sourceRow = currentData[rowIdx];
+      if (sourceRow && sourceRow._isNew) {
+        toCreate.push(values);
+      } else {
+        toUpdate.push(values);
+      }
+    });
+
+    updateBtn.disabled = true;
+    addRowBtn.disabled = true;
+    showStatus('Сохранение изменений...');
+
+    let updatedCount = 0;
+    let createdCount = 0;
+    const errors = [];
+
+    // 1) существующие строки — одним запросом, как раньше
+    if (toUpdate.length > 0) {
+      try {
+        const result = await fetchJSON(`${API_BASE}/table/${currentTableName}`, {
+          method: 'POST',
+          body: JSON.stringify(toUpdate)
+        });
+        updatedCount = result.updated || toUpdate.length;
+      } catch (err) {
+        errors.push(`обновление: ${err.message}`);
+      }
+    }
+
+    // 2) новые строки — по одной, чтобы ошибка в одной не блокировала остальные
+    for (const values of toCreate) {
+      try {
+        await fetchJSON(`${API_BASE}/table/${currentTableName}/rows`, {
+          method: 'POST',
+          body: JSON.stringify(values)
+        });
+        createdCount += 1;
+      } catch (err) {
+        errors.push(`создание строки: ${err.message}`);
+      }
+    }
+
+    if (errors.length === 0) {
+      showToast(`✅ Сохранено: обновлено ${updatedCount}, создано ${createdCount}`);
+      showStatus(`Сохранено: обновлено ${updatedCount}, создано ${createdCount}`);
+    } else {
+      showToast(`⚠️ Сохранено частично (${errors.length} ошибок) — см. статус`, true);
+      showStatus(`Ошибки: ${errors.join('; ')}`, true);
+      console.error(errors);
+    }
+
+    // Перезагружаем таблицу, чтобы получить свежее состояние с сервера
+    await loadTableData(currentTableName);
+  }
+
+  // ================== Обработчики событий ==================
+  select.addEventListener('change', () => {
+    const tableName = select.value;
+    loadTableData(tableName);
+  });
+
+  addRowBtn.addEventListener('click', addRow);
+  updateBtn.addEventListener('click', saveAll);
+
+  // Делегирование клика по кнопкам удаления (создаются динамически)
+  container.addEventListener('click', (e) => {
+    const btn = e.target.closest('.row-delete');
+    if (!btn) return;
+    deleteRow(Number(btn.dataset.rowKey));
+  });
+
+  // ================== Инициализация ==================
+  loadTableList();
+</script>
+
+</body>
+</html>
