@@ -109,7 +109,7 @@ def check_vsan_and_disks_limit(cpu_hosts, disks_capacity, host_disks_qty,
 def requested_config(db_data: dict[str, Any], vcpu: int, vram: int, vssd: int,
                       cpu_vendor: str, cpu_min_frequency: int, cpu_overcommit: float,
                       works_main: str, capacity_disk_type: str,
-                      vsan_type: str, network_card_qty: int = 1):
+                      vsan_type: str="osa", network_card_qty: int = 1):
     parameters = db_data["parameters"]
     all_servers = db_data["servers"]
     all_rams = db_data["rams"]
@@ -126,8 +126,6 @@ def requested_config(db_data: dict[str, Any], vcpu: int, vram: int, vssd: int,
     is_esa = vsan_type == "esa"
     effective_disk_type = "nvme" if is_esa else capacity_disk_type
 
-    # Раньше фильтрация по вендору/частоте делалась в SQL (get_cpus_filtered);
-    # теперь cpus приходят уже сырыми в db_data, фильтруем здесь.
     filtered_cpus = [
         cpu for cpu in db_data["cpus"]
         if cpu["cores_frequency"] >= cpu_min_frequency

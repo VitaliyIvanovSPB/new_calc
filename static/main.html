@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Калькулятор ЧО VMvare</title>
+<title>Калькулятор ЧО</title>
 <style>
   :root{
     --green: #49cc90;
@@ -252,7 +252,7 @@
 <body>
 
 <header>
-  <h1>Калькулятор ЧО VMvare</h1>
+  <h1>Калькулятор ЧО</h1>
   <span>Оценка стоимости</span>
 </header>
 
@@ -283,20 +283,20 @@
 <script>
 const OPTION_LABELS = {
   works_main: { vsphere: "vSphere", vdi: "VDI" },
-  vsan_type: { osa: "OSA", esa: "ESA" },
+  // vsan_type: { osa: "OSA", esa: "ESA" },
   cpu_vendor: { any: "Any", intel: "Intel", amd: "AMD" },
   capacity_disk_type: { nvme: "NVME", ssd: "SSD" }
 };
 
 const PARAMS = [
+  { name:"works_main", label:"Тип ЧО", type:"enum", required:true, options:["vsphere","vdi"], value:"vsphere" },
   { name:"vcpu", label:"vCPU", hint:"количество виртуальных ядер", type:"integer", required:true, min:1, value:390 },
   { name:"vram", label:"vRAM, ГБ", hint:"объём виртуальной памяти", type:"integer", required:true, min:1, value:2000 },
   { name:"vssd", label:"vSSD, ГБ", hint:"объём дискового пространства", type:"integer", required:true, min:1, value:22000 },
   { name:"cpu_min_frequency", label:"Мин. частота CPU, МГц", type:"integer", required:true, min:1, value:3600 },
   { name:"cpu_overcommit", label:"CPU overcommit", hint:"коэффициент переподписки CPU", type:"number", required:true, min:1, value:1, step:1 },
   { name:"cpu_vendor", label:"Вендор CPU", type:"enum", required:true, options:["any","intel","amd"], value:"any" },
-  { name:"works_main", label:"Тип ЧО", type:"enum", required:true, options:["vsphere","vdi"], value:"vsphere" },
-  { name:"vsan_type", label:"Тип vSAN", type:"enum", required:true, options:["osa","esa"], value:"osa" },
+  // { name:"vsan_type", label:"Тип vSAN", type:"enum", required:true, options:["osa","esa"], value:"osa" },
   { name:"capacity_disk_type", label:"Тип дисков", type:"enum", required:true, options:["nvme","ssd"], value:"nvme" },
 ];
 
@@ -338,30 +338,30 @@ PARAMS.forEach(p => {
   input.addEventListener("input", updateExecuteAvailability);
   input.addEventListener("change", updateExecuteAvailability);
 
-  if (p.name === "capacity_disk_type") {
-    const note = document.createElement("span");
-    note.className = "p-hint-inline";
-    note.id = "capacity-disk-type-note";
-    note.textContent = "При выборе ESA фиксируется значение NVMe";
-    tdInput.appendChild(note);
-  }
+  // if (p.name === "capacity_disk_type") {
+  //   const note = document.createElement("span");
+  //   note.className = "p-hint-inline";
+  //   note.id = "capacity-disk-type-note";
+  //   note.textContent = "При выборе ESA фиксируется значение NVMe";
+  //   tdInput.appendChild(note);
+  // }
 
   tr.appendChild(tdName);
   tr.appendChild(tdInput);
   paramsTable.appendChild(tr);
 });
 
-function updateDiskTypeAvailability() {
-  const vsanSelect = document.getElementById("param-vsan_type");
-  const diskSelect = document.getElementById("param-capacity_disk_type");
-  if (!vsanSelect || !diskSelect) return;
+// function updateDiskTypeAvailability() {
+//   const vsanSelect = document.getElementById("param-vsan_type");
+//   const diskSelect = document.getElementById("param-capacity_disk_type");
+//   if (!vsanSelect || !diskSelect) return;
 
-  const isEsa = vsanSelect.value === "esa";
-  diskSelect.disabled = isEsa;
-  if (isEsa) {
-    diskSelect.value = "nvme";
-  }
-}
+//   const isEsa = vsanSelect.value === "esa";
+//   diskSelect.disabled = isEsa;
+//   if (isEsa) {
+//     diskSelect.value = "nvme";
+//   }
+// }
 
 function updateExecuteAvailability() {
   const btn = document.getElementById("execute-btn");
@@ -372,10 +372,10 @@ function updateExecuteAvailability() {
   btn.disabled = !allValid;
 }
 
-document.getElementById("param-vsan_type").addEventListener("change", () => {
-  updateDiskTypeAvailability();
-  updateExecuteAvailability();
-});
+// document.getElementById("param-vsan_type").addEventListener("change", () => {
+//   updateDiskTypeAvailability();
+//   updateExecuteAvailability();
+// });
 
 function collectParams() {
   const values = {};

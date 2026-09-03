@@ -548,7 +548,7 @@ class RequestedConfigParams(BaseModel):
     cpu_vendor: CpuVendor = CpuVendor.any  # pyright: ignore[reportInvalidTypeForm, reportAttributeAccessIssue]
     works_main: WorksMain  # pyright: ignore[reportInvalidTypeForm]
     capacity_disk_type: CapacityDiskType  # pyright: ignore[reportInvalidTypeForm]
-    vsan_type: VsanType  # pyright: ignore[reportInvalidTypeForm]
+    # vsan_type: VsanType  # pyright: ignore[reportInvalidTypeForm]
 
     model_config = ConfigDict(extra="forbid")
 
@@ -615,9 +615,8 @@ class ConfigOption(BaseModel):
 def get_requested_config(
     params: Annotated[RequestedConfigParams, Query()],
 ) -> list[ConfigOption]:
-    db_data = load_db_data()
     raw_result = requested_config(
-        db_data=db_data,
+        db_data=load_db_data(),
         vcpu=params.vcpu,
         vram=params.vram,
         vssd=params.vssd,
@@ -626,7 +625,7 @@ def get_requested_config(
         cpu_vendor=params.cpu_vendor.value,
         works_main=params.works_main.value,
         capacity_disk_type=params.capacity_disk_type.value,
-        vsan_type=params.vsan_type.value,
+        # vsan_type=params.vsan_type.value,
     )
 
     return [ConfigOption.model_validate(item) for item in raw_result]
