@@ -399,7 +399,7 @@ function buildQueryString(values) {
 // Если бэкенд вернёт поле, которого нет в этом словаре — на экране
 // покажется его исходное имя как есть, ничего не сломается.
 const RESULT_FIELD_LABELS = {
-  "Need hosts by CPU(n+1)": "Кол-во хостов (n+1)",
+  "Need hosts by CPU": "Кол-во хостов",
   "AllFlash vSAN": "AllFlash vSAN",
   "Failures to Tolerate": "Failures to Tolerate",
   "CPU overcommit": "Переподписка",
@@ -424,6 +424,13 @@ function fieldLabel(key) {
 // ---- отображение поля Total price, Rub как акцент карточки, остальные — сеткой ----
 const CARD_TITLE_KEYS = ["CPU", "Server"];
 const PRICE_KEY = "Total price, Rub";
+
+// "Need hosts by CPU" и "CPU redundancy" — два отдельных поля от API
+// (специально разделены на бэкенде, чтобы не завязывать имя ключа на
+// переменное значение n), но на экране показываем их одной ячейкой:
+// "Кол-во хостов (n+3)".
+const HOSTS_KEY = "Need hosts by CPU";
+const REDUNDANCY_KEY = "CPU redundancy";
 
 function renderResults(data) {
   const wrap = document.getElementById("results-wrap");
@@ -467,9 +474,14 @@ function renderResults(data) {
     grid.className = "variant-grid";
     Object.entries(item).forEach(([key, val]) => {
       if (key === PRICE_KEY) return;
+      if (key === REDUNDANCY_KEY) return; // объединяется с HOSTS_KEY ниже
+
       const field = document.createElement("div");
       field.className = "vfield";
-      field.innerHTML = `<span class="vlabel">${fieldLabel(key)}</span><span class="vvalue">${val}</span>`;
+      const label = (key === HOSTS_KEY && item[REDUNDANCY_KEY])
+        ? `${fieldLabel(key)} (${item[REDUNDANCY_KEY]})`
+        : fieldLabel(key);
+      field.innerHTML = `<span class="vlabel">${label}</span><span class="vvalue">${val}</span>`;
       grid.appendChild(field);
     });
     card.appendChild(grid);

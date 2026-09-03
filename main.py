@@ -556,7 +556,8 @@ class RequestedConfigParams(BaseModel):
 # ---- Модель одного варианта конфигурации в ответе ----
 
 class ConfigOption(BaseModel):
-    hosts_by_cpu: int = Field(..., alias="Need hosts by CPU(n+1)")
+    hosts_by_cpu: int = Field(..., alias="Need hosts by CPU")
+    cpu_redundancy: str = Field(..., alias="CPU redundancy")
     all_flash_vsan: str = Field(..., alias="AllFlash vSAN")
     failures_to_tolerate: int = Field(..., alias="Failures to Tolerate")
     cpu_overcommit: str = Field(..., alias="CPU overcommit")
@@ -579,7 +580,8 @@ class ConfigOption(BaseModel):
         extra="forbid",  # теперь набор полей фиксирован — строгая валидация
         json_schema_extra={
             "example": {
-                "Need hosts by CPU(n+1)": 7,
+                "Need hosts by CPU": 7,
+                "CPU redundancy": "n+1",
                 "AllFlash vSAN": "RAID-6",
                 "Failures to Tolerate": 2,
                 "CPU overcommit": "1",

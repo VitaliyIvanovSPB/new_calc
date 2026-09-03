@@ -17,15 +17,15 @@ def get_works_price(hosts_qty: int, main: str, works_base: float,
                      works_coefficients: dict[Any, tuple[Any, ...]]) -> float:
     thresholds = [8, 16, 24, 32, 64, 96, 128]
     index = next((i for i, limit in enumerate(thresholds) if hosts_qty < limit), 6)
-    return works_base * works_coefficients[main][index]
+    return works_base * works_coefficients[main][index]/thresholds[6]*hosts_qty
 
 
 def get_network_coefficient(value, ports_map):
-    return next((v for k, v in ports_map.items() if value <= k), 8)
+    return next((v for k, v in ports_map.items() if value <= k), 9)
 
 
 def get_network_price(host_qty: int, network_card_qty: int, switches, switches_ipmi):
-    ports_map = {
+    switch_ports_map = {
         6: 0.125,
         12: 0.25,
         24: 0.5,
@@ -39,9 +39,23 @@ def get_network_price(host_qty: int, network_card_qty: int, switches, switches_i
         250: 5,
         298: 6,
         346: 7,
+        384: 8,
     }
-    network = get_network_coefficient(host_qty * network_card_qty * 2, ports_map)
-    network_ipmi = get_network_coefficient(host_qty * network_card_qty, ports_map)
+    ipmi_switch_ports_map = {
+        6: 0.125,
+        12: 0.25,
+        24: 0.5,
+        48: 1,
+        96: 2,
+        144: 3,
+        240: 4,
+    }
+    network = get_network_coefficient(host_qty * network_card_qty * 2, switch_ports_map)
+    network_ipmi = get_network_coefficient(host_qty, ipmi_switch_ports_map)
+    print(network )
+    print(host_qty * network_card_qty * 2)
+    print(network_ipmi )
+
     return network * switches + network_ipmi * switches_ipmi
 
 
@@ -144,7 +158,9 @@ def requested_config(db_data: dict[str, Any], vcpu: int, vram: int, vssd: int,
 
             for ram in rams:
                 ram_1host = get_ram_in_host(cpu_hosts, ram, vram, parameters["max_ram_usage"])
-                if ram_1host > max_ram or ram_1host in (14, 18, 22):
+                if ram_1host in (14, 18, 22):
+                    ram_1host += 2
+                if ram_1host > max_ram:
                     continue
 
                 for disk_size, disk_groups in raids_data.items():
@@ -204,8 +220,6 @@ def requested_config(db_data: dict[str, Any], vcpu: int, vram: int, vssd: int,
                         switches = parameters.get("switches")
                         switches_ipmi = parameters.get("switches_ipmi")
                         if switches is None or switches_ipmi is None:
-                            # previously masked as a bare `except TypeError: continue`
-                            # with no indication of why the config was skipped
                             continue
                         network_price = math.ceil(
                             get_network_price(
@@ -224,7 +238,8 @@ def requested_config(db_data: dict[str, Any], vcpu: int, vram: int, vssd: int,
                         )
                         all_configs.append(
                             {
-                                f"Need hosts by CPU(n+{n})": cpu_hosts_n,
+                                "Need hosts by CPU": cpu_hosts_n,
+                                "CPU redundancy": f"n+{n}",
                                 "AllFlash vSAN": raid_config[key]["FTM"],
                                 "Failures to Tolerate": raid_config[key]["FTT"],
                                 "CPU overcommit": f"{cpu_overcommit}",
@@ -366,16 +381,16 @@ if __name__ == "__main__":
     print(
         requested_config(
             db_data=_load_db_data_for_test(),
-            vcpu=390,
-            vram=2000,
-            vssd=22000,
-            cpu_min_frequency=3600,
-            cpu_overcommit=1,
-            cpu_vendor="any",
+            vcpu=60385,
+            vram=162418,
+            vssd=1500000,
+            cpu_min_frequency=2400,
+            cpu_overcommit=8,
+            cpu_vendor="amd",
             network_card_qty=1,
             works_main="vsphere",
             capacity_disk_type="nvme",
-            vsan_type="osa",
+            vsan_type="esa",
         )
     )
 
