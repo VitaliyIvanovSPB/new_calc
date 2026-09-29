@@ -4,276 +4,416 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Калькулятор ЧО</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /*
+    Палитра и шрифт — по открытому брендбуку Selectel (brand.selectel.ru):
+    Signal Red EB4247, Data Blue 092433, Server Grey E3E6E7, шрифт Manrope
+    (фолбэк Arial). Рекомендованное соотношение цветов брендбука: 30% Data
+    Blue, 30% белый, 20% Signal Red, 15% текстовый чёрный, 5% холодный серый —
+    синий и белый преобладают в фонах и структуре, красный — только акцент
+    (кнопки, бейджи, лучшая цена, фокус), не основной цвет интерфейса.
+  */
   :root{
-    --green: #49cc90;
-    --green-dark: #0f9d63;
-    --blue: #4990e2;
-    --blue-dark: #1f6fce;
-    --border: #d8dde3;
-    --bg: #fafafa;
-    --panel: #ffffff;
-    --text: #3b4151;
-    --muted: #6b7280;
-    --mono: 'Source Code Pro', 'SFMono-Regular', Consolas, Menlo, monospace;
+    --accent:#eb4247;        /* Signal Red — акцент: кнопки, бейджи, фокус */
+    --accent-dark:#be3c43;
+    --accent-soft:#fdeced;
+    --navy:#092433;          /* Data Blue — тёмные фоны, заголовки, крупный текст */
+    --text:#142d3c;
+    --muted:#738089;         /* Cool Gray из расширенной палитры */
+    --line:#e3e6e7;          /* Server Grey */
+    --surface:#f1f2f3;
+    --white:#fff;
+    --ok:#12a150;
+    --err:#be3c43;
+    --r-lg:24px;
+    --r-md:14px;
+    --mono:'SFMono-Regular',Consolas,Menlo,monospace;
   }
-  *{ box-sizing: border-box; }
+  *{ box-sizing:border-box; }
   body{
     margin:0;
-    background:var(--bg);
+    background:var(--surface);
     color:var(--text);
-    font-family:'Titillium Web','Segoe UI',Arial,sans-serif;
-  }
-  header{
-    background:#1b1b1b;
-    padding:18px 32px;
-    display:flex;
-    align-items:baseline;
-    gap:14px;
-  }
-  header h1{
-    color:#fff;
-    font-size:22px;
-    margin:0;
-    font-weight:600;
-  }
-  header span{
-    color:#9aa0a6;
-    font-family:var(--mono);
-    font-size:13px;
-  }
-  main{
-    max-width:980px;
-    margin:28px auto 80px;
-    padding:0 20px;
-  }
-  .desc{
-    color:var(--muted);
-    font-size:14px;
-    margin-bottom:24px;
+    font-family:'Manrope','Segoe UI',Arial,sans-serif;
+    font-size:15px;
     line-height:1.5;
   }
-  .op{
-    border:1px solid var(--green);
-    border-radius:4px;
-    background:#f0fff8;
-    margin-bottom:0;
-    overflow:hidden;
+
+  /* ---- шапка ---- */
+  header{
+    background:var(--white);
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    z-index:5;
   }
-  .op-body{
-    background:#fff;
-    border-top:1px solid var(--green);
-    padding:20px 20px 8px;
+  .header-in{
+    max-width:1120px;
+    margin:0 auto;
+    padding:14px 24px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .logo{
+    width:36px;
+    height:36px;
+    display:grid;
+    place-items:center;
+    flex:none;
+  }
+  .logo svg{ display:block; }
+  header strong{ font-size:17px; color:var(--navy); }
+
+  /* ---- первый экран ---- */
+  .hero{
+    background:var(--navy);
+    color:#fff;
+    padding:56px 24px 120px;
+  }
+  .hero-in{ max-width:1120px; margin:0 auto; }
+  .hero h1{
+    margin:0 0 14px;
+    font-size:clamp(30px,5vw,48px);
+    line-height:1.1;
+    font-weight:800;
+    letter-spacing:-.02em;
+    max-width:720px;
+  }
+  .hero p{
+    margin:0;
+    max-width:560px;
+    color:#aebbd3;
+    font-size:17px;
   }
 
+  main{
+    max-width:1120px;
+    margin:-72px auto 80px;
+    padding:0 24px;
+  }
+
+  /* ---- форма ---- */
+  .panel{
+    background:var(--white);
+    border-radius:var(--r-lg);
+    padding:32px 36px 12px;
+    box-shadow:0 12px 40px rgba(13,27,51,.10);
+  }
   .section-title{
-    font-size:13px;
-    font-weight:600;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    color:#3b4151;
-    border-bottom:1px solid var(--border);
-    padding-bottom:6px;
-    margin:0 0 12px;
+    font-size:22px;
+    font-weight:700;
+    color:var(--navy);
+    margin:0 0 8px;
   }
-
   table.params{
     width:100%;
     border-collapse:collapse;
-    margin-bottom:22px;
-    font-size:13px;
+    margin-bottom:8px;
   }
-  table.params td{
-    padding:10px 8px;
+  table.params > tbody > tr > td,
+  table.params > tr > td{
+    padding:14px 0;
     vertical-align:top;
-    border-bottom:1px solid #eef0f2;
+    border-bottom:1px solid var(--line);
   }
   .p-name{
-    font-family:'Titillium Web','Segoe UI',Arial,sans-serif;
     font-weight:600;
-    color:#3b4151;
-    width:220px;
+    color:var(--navy);
+    width:260px;
+    padding-right:20px;
   }
   .p-required{
-    color:#c0392b;
-    font-size:11px;
+    color:var(--err);
+    font-size:12px;
     font-weight:400;
-    font-family:'Titillium Web',sans-serif;
     display:block;
-    margin-top:2px;
   }
   .p-type{
     color:var(--muted);
-    font-size:12px;
-    font-family:'Titillium Web','Segoe UI',Arial,sans-serif;
+    font-size:13px;
     font-weight:400;
     display:block;
-    margin-top:2px;
   }
   .p-input input,
   .p-input select{
     width:100%;
-    max-width:280px;
-    padding:7px 9px;
-    border:1px solid var(--border);
-    border-radius:4px;
-    font-family:var(--mono);
-    font-size:13px;
-    background:#fff;
+    max-width:320px;
+    height:44px;
+    padding:0 14px;
+    border:1.5px solid var(--line);
+    border-radius:var(--r-md);
+    font:inherit;
+    background:var(--white);
     color:var(--text);
+    transition:border-color .15s, box-shadow .15s;
   }
+  .p-input input:hover,
+  .p-input select:hover{ border-color:#c5cfdf; }
   .p-input input:focus,
   .p-input select:focus{
-    outline:2px solid var(--blue);
-    outline-offset:1px;
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px var(--accent-soft);
   }
-  .p-input input:invalid{
-    border-color:#c0392b;
-  }
+  .p-input input:invalid{ border-color:var(--err); }
+  .p-input input:disabled,
   .p-input select:disabled{
-    background:#f0f1f3;
+    background:var(--surface);
     color:var(--muted);
     cursor:not-allowed;
   }
-  .p-hint-inline{
-    display:block;
-    font-size:11px;
-    color:var(--muted);
-    margin-top:4px;
-  }
 
+  /* ---- профили VDI ---- */
+  #vdi-profiles-row{ display:none; }
+  .vdi-block{
+    background:var(--accent-soft);
+    border-radius:var(--r-md);
+    padding:20px 20px 18px;
+  }
+  .vdi-title{
+    font-size:16px;
+    font-weight:700;
+    color:var(--navy);
+    margin:0 0 12px;
+  }
+  .vdi-scroll{ overflow-x:auto; }
+  table.vdi-table{
+    width:100%;
+    min-width:560px;
+    border-collapse:collapse;
+    background:var(--white);
+    border-radius:var(--r-md);
+    overflow:hidden;
+  }
+  table.vdi-table th{
+    text-align:left;
+    font-size:13px;
+    font-weight:600;
+    color:var(--muted);
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  table.vdi-table td{
+    padding:8px 12px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  table.vdi-table tr:last-child td{ border-bottom:none; }
+  table.vdi-table td.vdi-label{ font-weight:600; white-space:nowrap; color:var(--navy); }
+  table.vdi-table input{
+    width:100%;
+    min-width:70px;
+    height:38px;
+    padding:0 10px;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    font:inherit;
+  }
+  table.vdi-table input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .vdi-totals{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .vt-item{
+    background:var(--white);
+    border-radius:999px;
+    padding:6px 14px;
+    font-size:14px;
+  }
+  .vt-item b{ color:var(--accent-dark); }
+
+  /* ---- кнопка ---- */
   .execute-row{
     display:flex;
     align-items:center;
-    gap:14px;
-    padding:14px 0 20px;
+    gap:16px;
+    padding:20px 0 24px;
+    flex-wrap:wrap;
   }
   button.execute{
-    background:var(--blue);
+    background:var(--accent);
     color:#fff;
     border:none;
-    font-size:15px;
+    font:inherit;
     font-weight:600;
-    padding:10px 32px;
-    border-radius:4px;
+    font-size:16px;
+    height:50px;
+    padding:0 36px;
+    border-radius:999px;
     cursor:pointer;
     transition:background .15s;
   }
-  button.execute:hover{ background:var(--blue-dark); }
-  button.execute:disabled{ background:#a9c6ec; cursor:default; }
+  button.execute:hover{ background:var(--accent-dark); }
+  button.execute:focus-visible{ outline:3px solid var(--accent-soft); outline-offset:2px; }
+  button.execute:disabled{ background:#c9ced1; cursor:default; }
+  .status-inline{ font-size:14px; color:var(--muted); visibility:hidden; }
+  .status-inline.ok{ color:var(--ok); }
+  .status-inline.err{ color:var(--err); }
 
-  .status-inline{
-    font-family:var(--mono);
-    font-size:13px;
-    color:var(--muted);
+  /* ---- результаты ---- */
+  #results-wrap{ margin-top:40px; }
+  #results-summary{ font-size:22px; font-weight:700; color:var(--navy); margin-bottom:16px; }
+  .empty-state{ background:var(--white); border-radius:var(--r-lg); padding:40px; text-align:center; color:var(--muted); }
+  .cards-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));
+    gap:24px;
+    align-items:stretch;
   }
-  .status-inline.ok{ color:var(--green-dark); }
-  .status-inline.err{ color:#c0392b; }
-
-  /* ---- results ---- */
-  #results-wrap{
-    margin-top:32px;
+  .config-card{
+    background:var(--white);
+    border:2px solid transparent;
+    border-radius:var(--r-lg);
+    padding:28px;
+    box-shadow:0 4px 20px rgba(13,27,51,.06);
+    display:flex;
+    flex-direction:column;
+    transition:transform .25s ease, box-shadow .25s ease;
   }
-  #results-summary{
-    font-size:13px;
-    color:var(--muted);
-    margin-bottom:14px;
-  }
-  .empty-state{
-    border:1px dashed var(--border);
-    border-radius:6px;
-    padding:32px;
-    text-align:center;
-    color:var(--muted);
-    font-size:14px;
-  }
-  .variant-card{
-    border:1px solid var(--border);
-    border-radius:6px;
-    background:#fff;
-    margin-bottom:16px;
-    overflow:hidden;
-  }
-  .variant-head{
+  .config-card:hover{ transform:translateY(-4px); box-shadow:0 14px 36px rgba(13,27,51,.12); }
+  .config-card.best{ border-color:var(--accent); }
+  .card-header{
     display:flex;
     justify-content:space-between;
-    align-items:center;
-    background:#f7f8fa;
-    padding:10px 16px;
-    border-bottom:1px solid var(--border);
+    align-items:flex-start;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+    padding-bottom:20px;
+    border-bottom:1px solid var(--line);
   }
-  .variant-head .vname{
+  .card-title{ margin:0; font-size:19px; font-weight:700; color:var(--navy); }
+  .vbadge{
+    display:inline-block;
+    margin-top:8px;
+    padding:2px 12px;
+    border-radius:999px;
+    background:var(--accent);
+    color:#fff;
+    font-size:13px;
     font-weight:600;
-    font-size:14px;
   }
-  .variant-head .vprice{
-    font-family:var(--mono);
-    font-weight:700;
-    font-size:14px;
-    color:var(--green-dark);
+  .card-price{ text-align:right; }
+  .price-value{ font-size:28px; font-weight:800; line-height:1.15; color:var(--navy); white-space:nowrap; letter-spacing:-.01em; }
+  .price-note{ font-size:13px; color:var(--muted); }
+  .card-section{ margin-bottom:22px; }
+  .card-section h4{ display:flex; align-items:center; gap:8px; margin:0 0 12px; font-size:15px; font-weight:700; color:var(--navy); }
+  .section-icon{ display:inline-flex; color:var(--accent); flex:none; }
+  .specs-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px 24px; }
+  .spec-label{ display:block; font-size:13px; color:var(--muted); margin-bottom:2px; }
+  .spec-value{ display:block; font-weight:600; color:var(--navy); word-break:break-word; }
+  .hw-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .hw-list li{ display:flex; gap:10px; font-size:14px; line-height:1.4; }
+  .hw-list li::before{ content:""; flex:none; width:6px; height:6px; margin-top:8px; border-radius:50%; background:var(--accent); }
+  .hw-list b{ font-weight:600; color:var(--navy); }
+  .card-footer{ margin-top:auto; padding-top:20px; border-top:1px solid var(--line); }
+  .btn-order{
+    width:100%;
+    height:48px;
+    border:none;
+    border-radius:999px;
+    background:var(--accent);
+    color:#fff;
+    font:inherit;
+    font-weight:600;
+    font-size:16px;
+    cursor:pointer;
+    transition:background .15s;
   }
-  .variant-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
-    gap:0;
+  .btn-order:hover{ background:var(--accent-dark); }
+  .btn-order:focus-visible{ outline:3px solid var(--accent-soft); outline-offset:2px; }
+
+  /* подсказки (тултипы) */
+  .tooltip{ position:relative; display:inline-block; cursor:help; border-bottom:1px dotted var(--muted); transition:color .2s, border-color .2s; }
+  .tooltip:hover, .tooltip:focus{ outline:none; color:var(--accent-dark); border-bottom-color:var(--accent-dark); }
+  .tooltip-text{
+    visibility:hidden;
+    opacity:0;
+    position:absolute;
+    bottom:calc(100% + 8px);
+    left:0;
+    width:240px;
+    padding:10px 14px;
+    border-radius:10px;
+    background:var(--navy);
+    color:#fff;
+    font-size:12px;
+    font-weight:400;
+    line-height:1.4;
+    text-align:left;
+    z-index:10;
+    pointer-events:none;
+    box-shadow:0 8px 16px rgba(13,27,51,.2);
+    transition:opacity .2s;
   }
-  .vfield{
-    padding:10px 16px;
-    border-bottom:1px solid #f0f1f3;
-    border-right:1px solid #f0f1f3;
-  }
-  .vfield .vlabel{
-    display:block;
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:.04em;
-    color:var(--muted);
-    margin-bottom:3px;
-  }
-  .vfield .vvalue{
-    font-size:13.5px;
-    font-family:var(--mono);
-    color:var(--text);
-    word-break:break-word;
-  }
+  .tooltip:hover .tooltip-text, .tooltip:focus .tooltip-text{ visibility:visible; opacity:1; }
 
   pre.raw-json{
-    background:#282c34;
-    color:#abb2bf;
+    background:var(--navy);
+    color:#c9d6ee;
     font-family:var(--mono);
-    font-size:12.5px;
-    padding:14px 16px;
-    border-radius:4px;
+    font-size:13px;
+    padding:16px 20px;
+    border-radius:var(--r-md);
     overflow-x:auto;
     display:none;
+  }
+
+  @media (max-width:720px){
+    .panel{ padding:24px 20px 8px; }
+    table.params, table.params tbody, table.params tr, table.params td{ display:block; width:100%; }
+    table.params td{ border-bottom:none; padding:8px 0 0; }
+    .p-name{ width:100%; padding-right:0; }
+    .p-input input, .p-input select{ max-width:100%; }
+    .hero{ padding:36px 20px 100px; }
+    main{ padding:0 12px; }
+    .config-card{ padding:20px; } .price-value{ font-size:24px; } .specs-grid{ grid-template-columns:1fr; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Калькулятор ЧО</h1>
-  <span>Оценка стоимости</span>
+  <div class="header-in">
+    <div class="logo" aria-hidden="true">
+      <svg width="36" height="36" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#EB4247"/>
+        <path d="M24.8867 17.5585C24.192 16.6277 23.3585 15.9762 22.4323 15.5108C21.5061 15.0919 20.441 14.7196 19.2833 14.3939L14.8376 13.0908C13.7262 12.8115 12.8463 12.4392 12.1517 12.0204C11.5033 11.6015 11.1329 10.95 11.1329 10.0657C11.1329 9.41421 11.3644 8.85574 11.7812 8.34381C12.198 7.83189 12.8 7.45958 13.5409 7.18034C14.2819 6.90111 15.0691 6.80803 15.8564 6.80803C17.1994 6.85457 18.3571 7.22688 19.3759 7.9715C20.3947 8.71612 21.043 9.73998 21.3209 10.9965L25.7202 10.2519C25.3498 8.71612 24.7014 7.3665 23.8216 6.29611C22.9417 5.22571 21.8303 4.38802 20.441 3.82955C19.098 3.27108 17.5698 2.94531 15.9027 2.94531C14.2356 2.99185 12.7074 3.22455 11.3181 3.82955C9.92884 4.38802 8.86373 5.22571 8.07647 6.34264C7.28922 7.41304 6.87244 8.76266 6.87244 10.2984C6.87244 12.2065 7.38184 13.6492 8.44695 14.58C9.51205 15.5108 10.8087 16.2089 12.3832 16.6277L18.8665 18.5823C19.839 18.8616 20.5336 19.2804 20.9967 19.7458C21.0779 19.8274 21.1433 19.9091 21.2021 20H25.837C25.7166 19.024 25.3622 18.2101 24.8867 17.5585Z" fill="white"/>
+        <path d="M21.632 22H25.8973C25.7902 23.3487 25.3749 24.5212 24.6089 25.5174C23.6827 26.6809 22.525 27.5651 21.0431 28.1701C19.5612 28.7751 17.9404 29.0543 16.1806 29.0543C14.3746 29.0543 12.7538 28.7286 11.2719 28.077C9.78999 27.4255 8.58595 26.5413 7.65977 25.3312C6.73359 24.1212 6.13157 22.7251 5.90002 21.1428L10.1605 20.4912C10.5309 21.9805 11.2719 23.0974 12.4296 23.9351C13.5873 24.7728 14.9303 25.1916 16.4585 25.1916C17.8941 25.1916 19.1444 24.8659 20.1632 24.2143C21.0518 23.6339 21.5141 22.8821 21.632 22Z" fill="white"/>
+      </svg>
+    </div>
+    <strong>Калькулятор ЧО</strong>
+  </div>
 </header>
 
+<section class="hero">
+  <div class="hero-in">
+    <h1>Подберите конфигурацию частного облака</h1>
+    <p>Укажите нужные ресурсы — мы покажем варианты серверов и их стоимость.</p>
+  </div>
+</section>
+
 <main>
-  <p class="desc">
-    Введите нужные параметры запроса и получите варианты ЧО и стоимость.
-  </p>
+  <section class="panel">
+    <p class="section-title">Параметры</p>
 
-  <section class="op">
-    <div class="op-body">
-      <p class="section-title">Параметры</p>
+    <table class="params" id="params-table">
+      <!-- строки генерируются в JS ниже по описанию PARAMS -->
+    </table>
 
-      <table class="params" id="params-table">
-        <!-- строки генерируются в JS ниже по описанию PARAMS -->
-      </table>
-
-      <div class="execute-row">
-        <button class="execute" id="execute-btn">Рассчитать</button>
-        <span class="status-inline" id="status-inline"></span>
-      </div>
-
+    <div class="execute-row">
+      <button class="execute" id="execute-btn">Рассчитать</button>
+      <span class="status-inline" id="status-inline"></span>
     </div>
   </section>
 
@@ -281,27 +421,72 @@
 </main>
 
 <script>
-const OPTION_LABELS = {
-  works_main: { vsphere: "vSphere", vdi: "VDI" },
-  // vsan_type: { osa: "OSA", esa: "ESA" },
-  cpu_vendor: { any: "Any", intel: "Intel", amd: "AMD" },
-  capacity_disk_type: { nvme: "NVME", ssd: "SSD" }
-};
+function optionLabel(value) {
+  return String(value).toUpperCase();
+}
 
 const PARAMS = [
-  { name:"works_main", label:"Тип ЧО", type:"enum", required:true, options:["vsphere","vdi"], value:"vsphere" },
+  { name:"works_main", label:"Тип ЧО", type:"enum", required:true, options:[], value:"" },
   { name:"vcpu", label:"vCPU", hint:"количество виртуальных ядер", type:"integer", required:true, min:1, value:390 },
   { name:"vram", label:"vRAM, ГБ", hint:"объём виртуальной памяти", type:"integer", required:true, min:1, value:2000 },
   { name:"vssd", label:"vSSD, ГБ", hint:"объём дискового пространства", type:"integer", required:true, min:1, value:22000 },
+  { name:"vgpu", label:"vGPU, ГБ", hint:"объём видеопамяти", type:"integer", required:false, min:0, value:0 },
   { name:"cpu_min_frequency", label:"Мин. частота CPU, МГц", type:"integer", required:true, min:1, value:3600 },
   { name:"cpu_overcommit", label:"CPU overcommit", hint:"коэффициент переподписки CPU", type:"number", required:true, min:1, value:1, step:1 },
-  { name:"cpu_vendor", label:"Вендор CPU", type:"enum", required:true, options:["any","intel","amd"], value:"any" },
+  { name:"cpu_vendor", label:"Вендор CPU", type:"enum", required:true, options:[], value:"" },
   // { name:"vsan_type", label:"Тип vSAN", type:"enum", required:true, options:["osa","esa"], value:"osa" },
-  { name:"capacity_disk_type", label:"Тип дисков", type:"enum", required:true, options:["nvme","ssd"], value:"nvme" },
+  { name:"capacity_disk_type", label:"Тип дисков", type:"enum", required:true, options:[], value:"" },
+];
+
+// Поля из PARAMS, значения которых берутся с бэкенда (/field-options).
+const DB_DRIVEN_ENUM_FIELDS = ["works_main", "cpu_vendor", "capacity_disk_type"];
+
+function applyFieldOptions(fieldOptions) {
+  DB_DRIVEN_ENUM_FIELDS.forEach(name => {
+    const options = fieldOptions && fieldOptions[name];
+    if (!Array.isArray(options) || options.length === 0) return;
+    const param = PARAMS.find(p => p.name === name);
+    if (!param) return;
+    param.options = options;
+    if (!options.includes(param.value)) param.value = options[0];
+  });
+}
+
+async function loadFieldOptions() {
+  let data;
+  try {
+    const resp = await fetch("/field-options", { headers: { accept: "application/json" } });
+    if (!resp.ok) return false;
+    data = await resp.json();
+  } catch (e) {
+    return false;
+  }
+  applyFieldOptions(data);
+  return DB_DRIVEN_ENUM_FIELDS.every(name => Array.isArray(data[name]) && data[name].length > 0);
+}
+
+// ---- Профили рабочих столов VDI ----
+// Показываются только при works_main === "vdi". Ресурсы каждого профиля
+// умножаются на "Кол-во" и суммируются; итог подставляется в vcpu / vram /
+// vssd / vgpu основной формы (в этом режиме они блокируются). Сами профили
+// уходят на бэкенд в поле vdi_profiles (JSON-массив).
+const VDI_RESOURCE_FIELDS = [
+  { key:"vcpu", label:"vCPU, шт" },
+  { key:"vram", label:"vRAM, GB" },
+  { key:"vssd", label:"vSSD, GB" },
+  { key:"vgpu", label:"GPU, GB" },
+];
+
+const VDI_PROFILES = [
+  { name:"Рабочий стол 1", vcpu:4,  vram:8, vssd:200, vgpu:0, count:10 },
+  { name:"Рабочий стол 2", vcpu:6,  vram:24, vssd:200, vgpu:0, count:0 },
+  { name:"Рабочий стол 3", vcpu:8,  vram:48, vssd:200, vgpu:0, count:0 },
+  { name:"Рабочий стол 4", vcpu:12, vram:64, vssd:200, vgpu:0, count:0 },
 ];
 
 const paramsTable = document.getElementById("params-table");
 
+function renderParamsTable() {
 PARAMS.forEach(p => {
   const tr = document.createElement("tr");
 
@@ -318,7 +503,7 @@ PARAMS.forEach(p => {
     p.options.forEach(opt => {
       const o = document.createElement("option");
       o.value = opt;
-      o.textContent = (OPTION_LABELS[p.name] && OPTION_LABELS[p.name][opt]) || opt;
+      o.textContent = optionLabel(opt);
       if (opt === p.value) o.selected = true;
       input.appendChild(o);
     });
@@ -328,8 +513,8 @@ PARAMS.forEach(p => {
     if (p.min !== undefined) input.min = p.min;
     if (p.step !== undefined) input.step = p.step;
     input.value = p.value;
-    input.required = p.required;
   }
+  input.required = p.required;
   input.dataset.param = p.name;
   input.id = "param-" + p.name;
 
@@ -338,38 +523,205 @@ PARAMS.forEach(p => {
   input.addEventListener("input", updateExecuteAvailability);
   input.addEventListener("change", updateExecuteAvailability);
 
-  // if (p.name === "capacity_disk_type") {
-  //   const note = document.createElement("span");
-  //   note.className = "p-hint-inline";
-  //   note.id = "capacity-disk-type-note";
-  //   note.textContent = "При выборе ESA фиксируется значение NVMe";
-  //   tdInput.appendChild(note);
-  // }
-
   tr.appendChild(tdName);
   tr.appendChild(tdInput);
   paramsTable.appendChild(tr);
+
+  // сразу после строки "Тип ЧО" вставляем скрытый блок профилей VDI
+  if (p.name === "works_main") {
+    const vdiRow = document.createElement("tr");
+    vdiRow.id = "vdi-profiles-row";
+    const vdiCell = document.createElement("td");
+    vdiCell.colSpan = 2;
+    vdiCell.appendChild(buildVdiBlock());
+    vdiRow.appendChild(vdiCell);
+    paramsTable.appendChild(vdiRow);
+  }
 });
+}
+
+function buildVdiBlock() {
+  const wrap = document.createElement("div");
+  wrap.className = "vdi-block";
+
+  const title = document.createElement("p");
+  title.className = "vdi-title";
+  title.textContent = "Профили рабочих столов VDI";
+  wrap.appendChild(title);
+
+  const scroll = document.createElement("div");
+  scroll.className = "vdi-scroll";
+  const table = document.createElement("table");
+  table.className = "vdi-table";
+
+  const thead = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  headRow.innerHTML = `<th>Роль</th>` + VDI_RESOURCE_FIELDS.map(f => `<th>${f.label}</th>`).join("") + `<th>Кол-во</th>`;
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  VDI_PROFILES.forEach((profile, idx) => {
+    const tr = document.createElement("tr");
+
+    const tdLabel = document.createElement("td");
+    tdLabel.className = "vdi-label";
+    tdLabel.textContent = profile.name;
+    tr.appendChild(tdLabel);
+
+    VDI_RESOURCE_FIELDS.forEach(f => {
+      const td = document.createElement("td");
+      const inp = document.createElement("input");
+      inp.type = "number";
+      inp.min = "0";
+      inp.value = profile[f.key];
+      inp.id = `vdi-${idx}-${f.key}`;
+      inp.dataset.profileIdx = idx;
+      inp.dataset.field = f.key;
+      inp.addEventListener("input", onVdiProfileInput);
+      td.appendChild(inp);
+      tr.appendChild(td);
+    });
+
+    const tdCount = document.createElement("td");
+    const countInp = document.createElement("input");
+    countInp.type = "number";
+    countInp.min = "0";
+    countInp.value = profile.count;
+    countInp.id = `vdi-${idx}-count`;
+    countInp.dataset.profileIdx = idx;
+    countInp.dataset.field = "count";
+    countInp.addEventListener("input", onVdiProfileInput);
+    tdCount.appendChild(countInp);
+    tr.appendChild(tdCount);
+
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  scroll.appendChild(table);
+  wrap.appendChild(scroll);
+
+  const totals = document.createElement("div");
+  totals.className = "vdi-totals";
+  totals.id = "vdi-totals";
+  wrap.appendChild(totals);
+
+  return wrap;
+}
+
+function onVdiProfileInput(e) {
+  const idx = Number(e.target.dataset.profileIdx);
+  const field = e.target.dataset.field;
+  const val = Number(e.target.value) || 0;
+  VDI_PROFILES[idx][field] = val;
+  recalcVdiTotals();
+}
+
+function recalcVdiTotals() {
+  const sums = { vcpu:0, vram:0, vssd:0, vgpu:0 };
+  VDI_PROFILES.forEach(profile => {
+    const count = Number(profile.count) || 0;
+    VDI_RESOURCE_FIELDS.forEach(f => {
+      sums[f.key] += (Number(profile[f.key]) || 0) * count;
+    });
+  });
+
+  ["vcpu","vram","vssd","vgpu"].forEach(key => {
+    const el = document.getElementById("param-" + key);
+    if (el) el.value = sums[key];
+  });
+
+  const totalsEl = document.getElementById("vdi-totals");
+  if (totalsEl) {
+    totalsEl.innerHTML = VDI_RESOURCE_FIELDS.map(f =>
+      `<span class="vt-item">${f.label}: <b>${sums[f.key]}</b></span>`
+    ).join("");
+  }
+
+  updateExecuteAvailability();
+}
+
+function toggleVdiMode() {
+  const worksSelect = document.getElementById("param-works_main");
+  const vdiRow = document.getElementById("vdi-profiles-row");
+  const isVdi = worksSelect.value.toLowerCase() === "vdi";
+
+  vdiRow.style.display = isVdi ? "table-row" : "none";
+
+  // В режиме VDI четыре поля заполняются из профилей и не редактируются
+  // вручную — прячем строку целиком, чтобы не дублировать итоги блока профилей.
+  ["vcpu","vram","vssd","vgpu"].forEach(key => {
+    const el = document.getElementById("param-" + key);
+    if (!el) return;
+    el.disabled = isVdi;
+    const row = el.closest("tr");
+    if (row) row.style.display = isVdi ? "none" : "";
+  });
+
+  if (isVdi) {
+    recalcVdiTotals();
+  } else {
+    updateExecuteAvailability();
+  }
+}
+
+async function init() {
+  const loaded = await loadFieldOptions();
+  renderParamsTable();
+  document.getElementById("param-works_main").addEventListener("change", toggleVdiMode);
+
+  if (!loaded) {
+    const statusEl = document.getElementById("status-inline");
+    statusEl.textContent = "Не удалось загрузить справочники (Тип ЧО / Вендор CPU / Тип дисков) с сервера. Обновите страницу.";
+    statusEl.className = "status-inline err";
+    document.getElementById("execute-btn").disabled = true;
+    return;
+  }
+
+  // works_main после applyFieldOptions() может сразу оказаться "VDI" —
+  // без этого вызова блок профилей остался бы скрыт, а поля vcpu/vram/vssd/vgpu
+  // — редактируемыми вручную.
+  toggleVdiMode();
+}
+init();
 
 // function updateDiskTypeAvailability() {
 //   const vsanSelect = document.getElementById("param-vsan_type");
 //   const diskSelect = document.getElementById("param-capacity_disk_type");
 //   if (!vsanSelect || !diskSelect) return;
-
 //   const isEsa = vsanSelect.value === "esa";
 //   diskSelect.disabled = isEsa;
-//   if (isEsa) {
-//     diskSelect.value = "nvme";
-//   }
+//   if (isEsa) diskSelect.value = "nvme";
 // }
 
 function updateExecuteAvailability() {
   const btn = document.getElementById("execute-btn");
+  const worksSelect = document.getElementById("param-works_main");
+  const isVdi = worksSelect && worksSelect.value.toLowerCase() === "vdi";
+
   const allValid = PARAMS.every(p => {
     const el = document.getElementById("param-" + p.name);
+    // В VDI-режиме vcpu/vram/vssd/vgpu disabled (checkValidity всегда true),
+    // их положительность проверяем отдельно ниже.
+    if (isVdi && ["vcpu", "vram", "vssd", "vgpu"].includes(p.name)) return true;
     return el.checkValidity();
   });
-  btn.disabled = !allValid;
+
+  // Итоговые суммы по профилям должны быть > 0, иначе бэкенд вернёт сырую
+  // ошибку валидации FastAPI (gt=0).
+  let vdiSumsValid = true;
+  if (isVdi) {
+    const sums = { vcpu: 0, vram: 0, vssd: 0 };
+    VDI_PROFILES.forEach(profile => {
+      const count = Number(profile.count) || 0;
+      sums.vcpu += (Number(profile.vcpu) || 0) * count;
+      sums.vram += (Number(profile.vram) || 0) * count;
+      sums.vssd += (Number(profile.vssd) || 0) * count;
+    });
+    vdiSumsValid = sums.vcpu > 0 && sums.vram > 0 && sums.vssd > 0;
+  }
+
+  btn.disabled = !allValid || !vdiSumsValid;
 }
 
 // document.getElementById("param-vsan_type").addEventListener("change", () => {
@@ -382,9 +734,14 @@ function collectParams() {
   let valid = true;
   PARAMS.forEach(p => {
     const el = document.getElementById("param-" + p.name);
-    if (p.type !== "enum" && el.value === "") valid = false;
+    if (!el.checkValidity()) valid = false;
     values[p.name] = el.value;
   });
+
+  if (values.works_main.toLowerCase() === "vdi") {
+    values.vdi_profiles = JSON.stringify(VDI_PROFILES);
+  }
+
   return { values, valid };
 }
 
@@ -395,9 +752,8 @@ function buildQueryString(values) {
 }
 
 // ---- подписи полей в карточках результата ----
-// Ключи должны совпадать с тем, что реально возвращает API (ConfigOption).
-// Если бэкенд вернёт поле, которого нет в этом словаре — на экране
-// покажется его исходное имя как есть, ничего не сломается.
+// Ключи должны совпадать с тем, что возвращает API (ConfigOption). Незнакомое
+// поле покажется под исходным именем — ничего не сломается.
 const RESULT_FIELD_LABELS = {
   "Need hosts by CPU": "Кол-во хостов",
   "AllFlash vSAN": "AllFlash vSAN",
@@ -405,6 +761,7 @@ const RESULT_FIELD_LABELS = {
   "CPU overcommit": "Переподписка",
   "CPU": "Процессор",
   "Server": "Серверная платформа",
+  "Videocard": "Видеокарта",
   "RAM": "Оперативная память",
   "Esxi disk": "Диск под ОС",
   "Cache disk": "Кэш-диск",
@@ -414,25 +771,162 @@ const RESULT_FIELD_LABELS = {
   "Admin main works": "Тип ЧО",
   "vCPU available": "Доступно vCPU",
   "vRAM available": "Доступно vRAM, ГБ",
-  "vSSD available": "Доступно vSSD, ГБ",
+  "vSSD available": "Доступно vSSD, ГБ (примерно)",
+  "vGPU available": "Доступно vGPU, ГБ",
 };
 
 function fieldLabel(key) {
   return RESULT_FIELD_LABELS[key] || key;
 }
 
-// ---- отображение поля Total price, Rub как акцент карточки, остальные — сеткой ----
-const CARD_TITLE_KEYS = ["CPU", "Server"];
-const PRICE_KEY = "Total price, Rub";
+// Часть полей (CPU, Total price, Rub) приходит как [значение, единица].
+// Числам добавляем разделители тысяч, остальное склеиваем через пробел.
+function formatFieldValue(val) {
+  if (!Array.isArray(val)) return val;
+  const [main, unit] = val;
+  const formattedMain = typeof main === "number" ? main.toLocaleString("ru-RU") : main;
+  return unit ? `${formattedMain} ${unit}` : `${formattedMain}`;
+}
 
-// "Need hosts by CPU" и "CPU redundancy" — два отдельных поля от API
-// (специально разделены на бэкенде, чтобы не завязывать имя ключа на
-// переменное значение n), но на экране показываем их одной ячейкой:
-// "Кол-во хостов (n+3)".
+const PRICE_KEY = "Total price, Rub";
+const PRICE_NOTE = ""; // например "в месяц", если цена считается помесячно
 const HOSTS_KEY = "Need hosts by CPU";
 const REDUNDANCY_KEY = "CPU redundancy";
 
-function renderResults(data) {
+// Секция «Запрошенные ресурсы»: значения берутся из формы (или из ответа API для overcommit).
+const OVERCOMMIT_TIP = "Коэффициент переподписки CPU: сколько виртуальных ядер приходится на одно физическое ядро хоста. При значении 1 ядра выделяются 1:1.";
+const REQUESTED = [
+  { param:"vcpu", label:"vCPU", unit:"ядер" },
+  { param:"vgpu", label:"vGPU", unit:"GB" },
+  { param:"vram", label:"vRAM", unit:"GB" },
+  { param:"vssd", label:"vSSD", unit:"GB" },
+  { param:"cpu_min_frequency", label:"Мин. частота CPU", unit:"МГц" },
+  { param:"cpu_overcommit", label:"Overcommit", api:"CPU overcommit", tip:OVERCOMMIT_TIP },
+];
+
+// Секция «Конфигурация кластера»: хосты + одна ячейка RAID/FTT.
+// API отдаёт две строки, например "RAID-1" и "FTT-1" (в полях "AllFlash vSAN" и
+// "Failures to Tolerate"); какая где лежит — определяем по содержимому.
+const RAID_KEYS = ["AllFlash vSAN", "Failures to Tolerate"];
+const RAID_VALUE = "ALL FLASH VSAN";
+
+// Секция «Спецификация оборудования» в нужном порядке.
+const HW_KEYS = ["CPU", "RAM", "Esxi disk", "Cache disk", "HBA adapter", "Capacity disk", "Network card", "Videocard", "Server"];
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+function fmt(val) {
+  if (Array.isArray(val)) return formatFieldValue(val);
+  if (typeof val === "boolean") return val ? "Да" : "Нет";
+  if (typeof val === "number") return val.toLocaleString("ru-RU");
+  return val;
+}
+
+// Для списка оборудования: ["Intel Xeon 6517P", "2 шт"] -> "Intel Xeon 6517P - 2 шт"; пусто -> "нет".
+// Разделитель — обычный короткий дефис "-" с пробелами по обе стороны (как в макете),
+// а не длинное тире, и добавляется всегда, когда unit определён (в т.ч. "0 шт"), а не
+// только когда он "truthy" — иначе дефис пропадал для количеств вида 0.
+function fmtHw(val) {
+  if (val === null || val === undefined || val === "" || val === false) return "нет";
+  if (Array.isArray(val)) {
+    const [main, unit] = val;
+    const m = typeof main === "number" ? main.toLocaleString("ru-RU") : main;
+    return (unit !== undefined && unit !== null && unit !== "") ? `${m} - ${unit}` : `${m}`;
+  }
+  return fmt(val);
+}
+
+function specItem(label, value, tip) {
+  const d = document.createElement("div");
+  d.className = "spec-item";
+  const l = tip
+    ? `<span class="tooltip" tabindex="0">${esc(label)}<span class="tooltip-text">${esc(tip)}</span></span>`
+    : esc(label);
+  d.innerHTML = `<span class="spec-label">${l}</span><span class="spec-value">${esc(value)}</span>`;
+  return d;
+}
+
+// Пиктограммы из официальной библиотеки Selectel (brand.selectel.ru/#page-pictograms):
+// shopping_cart.svg, servers_multiple.svg, server_vertical.svg — предоставлены
+// пользователем. Заливка переведена в currentColor, чтобы иконка наследовала
+// цвет через .section-icon (фирменный Signal Red), сама геометрия не менялась.
+const ICONS = {
+  resources: '<svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1232_2513)"><path d="M20.6732 48C22.8807 48 24.6703 46.2088 24.6703 43.9994C24.6703 41.7899 22.8807 39.9988 20.6732 39.9988C18.4657 39.9988 16.6762 41.7899 16.6762 43.9994C16.6762 46.2088 18.4657 48 20.6732 48Z" fill="currentColor"/><path d="M36.7038 48C38.9113 48 40.7008 46.2088 40.7008 43.9994C40.7008 41.7899 38.9113 39.9988 36.7038 39.9988C34.4963 39.9988 32.7067 41.7899 32.7067 43.9994C32.7067 46.2088 34.4963 48 36.7038 48Z" fill="currentColor"/><path d="M42.0097 8.00118H13.2859L13.1871 7.11921C12.9717 5.16259 12.0419 3.35424 10.5759 2.04058C9.10996 0.726929 7.21084 0.000337112 5.24239 0L0 0V4.00059H7.00632C7.4941 4.00176 7.96446 4.18208 8.32803 4.50727C8.6916 4.83246 8.92304 5.27988 8.97839 5.76452L11.9065 32.8196C12.1186 34.7785 13.0463 36.5902 14.5118 37.9073C15.9773 39.2243 17.8774 39.954 19.8477 39.9565L44.1335 39.9777V36.0018H18.1755C17.6869 36.0008 17.2157 35.8207 16.851 35.4956C16.4862 35.1706 16.2534 34.7231 16.1964 34.2378L15.9494 32.0118H40.7115C42.189 32.0099 43.6138 31.4627 44.7128 30.4751C45.8117 29.4875 46.5074 28.1289 46.6665 26.66L47.9647 14.6653C48.0585 13.8271 47.9744 12.9786 47.718 12.1751C47.4616 11.3716 47.0385 10.6313 46.4766 10.0024C45.9146 9.37346 45.2263 8.87017 44.4566 8.52534C43.6869 8.18051 42.8531 8.0019 42.0097 8.00118ZM43.9253 14.2243L43.5055 17.9921H36.4004V11.9947H41.9356C42.2177 11.9949 42.4966 12.0546 42.754 12.17C43.0114 12.2854 43.2415 12.4539 43.4293 12.6643C43.6171 12.8748 43.7584 13.1225 43.8439 13.3914C43.9294 13.6602 43.9571 13.944 43.9253 14.2243ZM25.4006 17.9921V11.9947H32.4034V17.9921H25.4006ZM32.4034 21.9997V27.9971H25.4006V21.9997H32.4034ZM21.4 11.9947V17.9921H14.3972L13.7304 11.9947H21.4ZM15.5226 28.0006L14.8593 22.0032H21.4V28.0006H15.5226ZM40.6233 28.0006H36.4004V22.0032H43.061L42.5953 26.2367C42.5367 26.7231 42.3018 27.1712 41.9352 27.4962C41.5686 27.8212 41.0956 28.0007 40.6056 28.0006H40.6233Z" fill="currentColor"/></g><defs><clipPath id="clip0_1232_2513"><rect width="48" height="48" fill="white"/></clipPath></defs></svg>',
+  cluster: '<svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_1231_1456)"><path d="M42.3334 48C43.0782 48.0023 43.8161 47.8574 44.5047 47.5735C45.1933 47.2896 45.819 46.8722 46.3456 46.3456C46.8723 45.8189 47.2896 45.1933 47.5735 44.5047C47.8575 43.8161 48.0024 43.0781 48 42.3333V36.0438V29.6333C47.9992 28.8905 47.8519 28.1552 47.5666 27.4694C47.2812 26.7836 46.8634 26.1608 46.337 25.6367C45.8107 25.1126 45.1861 24.6975 44.4991 24.415C43.8121 24.1326 43.0762 23.9885 42.3334 23.9909H5.64848C4.15146 23.9909 2.71566 24.5851 1.65654 25.6431C0.597417 26.7011 0.00160281 28.1363 0 29.6333L0 36.0438V42.3333C0 43.0751 0.146102 43.8096 0.429965 44.4949C0.713828 45.1802 1.12989 45.8029 1.6544 46.3274C2.17891 46.8519 2.8016 47.268 3.4869 47.5518C4.17221 47.8357 4.90671 47.9818 5.64848 47.9818H42.3334V48ZM4.80181 43.9964C4.58954 43.9964 4.38586 43.9125 4.23519 43.763C4.08452 43.6134 3.99908 43.4104 3.99748 43.1981V39.3095V28.7927C3.99748 28.581 4.08158 28.3779 4.23129 28.2282C4.381 28.0785 4.58405 27.9944 4.79577 27.9944H43.1982C43.4105 27.996 43.6135 28.0814 43.763 28.2321C43.9126 28.3828 43.9965 28.5865 43.9965 28.7987V39.3095V43.1739C43.9949 43.3868 43.9096 43.5904 43.7591 43.7409C43.6086 43.8914 43.405 43.9767 43.1921 43.9783H4.80181V43.9964Z" fill="currentColor"/><path d="M20.0358 31.9858H8.00098V35.9833H20.0358V31.9858Z" fill="currentColor"/><path d="M39.999 31.9858H36.0015V35.9833H39.999V31.9858Z" fill="currentColor"/><path d="M31.998 31.9858H28.0005V35.9833H31.998V31.9858Z" fill="currentColor"/><path d="M3.99748 12.0045V11.3998V4.80183C3.99748 4.69648 4.01832 4.59218 4.05882 4.49493C4.09931 4.39768 4.15866 4.30941 4.23343 4.2352C4.3082 4.161 4.39691 4.10232 4.49447 4.06256C4.59202 4.0228 4.69647 4.00274 4.80181 4.00354H43.1982C43.4105 4.00514 43.6135 4.09058 43.763 4.24125C43.9126 4.39192 43.9965 4.5956 43.9965 4.80787V11.3998V12.0045H47.994V8.10383V5.64849C47.994 4.90571 47.8475 4.17021 47.5628 3.48412C47.2782 2.79802 46.8611 2.1748 46.3353 1.65013C45.8095 1.12546 45.1854 0.709652 44.4987 0.426502C43.812 0.143351 43.0762 -0.0015776 42.3334 1.29511e-05H5.64848C4.15041 1.29511e-05 2.7137 0.595119 1.6544 1.65441C0.595106 2.71371 0 4.15042 0 5.64849L0 8.09778V12.0045H3.99748Z" fill="currentColor"/><path d="M3.99748 23.9788V23.374V16.7761C3.99748 16.5644 4.08158 16.3613 4.23129 16.2116C4.381 16.0619 4.58405 15.9778 4.79577 15.9778H43.1982C43.4105 15.9794 43.6135 16.0648 43.763 16.2155C43.9126 16.3662 43.9965 16.5698 43.9965 16.7821V23.374V23.9788H47.994V20.0781V17.6227C47.994 16.8799 47.8475 16.1445 47.5628 15.4584C47.2782 14.7723 46.8611 14.149 46.3353 13.6244C45.8095 13.0997 45.1854 12.6839 44.4987 12.4007C43.812 12.1176 43.0762 11.9727 42.3334 11.9743H5.64848C4.15041 11.9743 2.7137 12.5694 1.6544 13.6287C0.595106 14.688 0 16.1247 0 17.6227L0 20.0781V23.9788H3.99748Z" fill="currentColor"/></g><defs><clipPath id="clip0_1231_1456"><rect width="48" height="48" fill="white"/></clipPath></defs></svg>',
+  hardware: '<svg width="11" height="16" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M32 5.6454C32 4.14815 31.4037 2.71222 30.3422 1.6535C29.2808 0.594781 27.8412 0 26.34 0H5.65996C4.15885 0 2.71921 0.594781 1.65776 1.6535C0.596316 2.71222 0 4.14815 0 5.6454L0 29.8825V42.3546C0 43.8519 0.596316 45.2878 1.65776 46.3465C2.71921 47.4052 4.15885 48 5.65996 48H26.3344C27.0777 48 27.8137 47.854 28.5004 47.5703C29.1871 47.2866 29.811 46.8707 30.3366 46.3465C30.8622 45.8223 31.2791 45.1999 31.5635 44.515C31.8479 43.8301 31.9943 43.096 31.9943 42.3546V29.8811L32 5.6454ZM27.9871 43.2042C27.9871 43.4165 27.9026 43.62 27.7521 43.7701C27.6016 43.9202 27.3976 44.0045 27.1848 44.0045H4.81097C4.70567 44.0045 4.60141 43.9838 4.50415 43.9435C4.40689 43.9033 4.31854 43.8443 4.24415 43.77C4.16977 43.6957 4.1108 43.6074 4.07064 43.5104C4.03047 43.4133 4.0099 43.3093 4.01008 43.2042V28.0012V4.79859C4.0099 4.69363 4.03048 4.58967 4.07067 4.49267C4.11085 4.39567 4.16983 4.30753 4.24424 4.23332C4.31865 4.15911 4.40701 4.10027 4.50426 4.06019C4.60151 4.02011 4.70574 3.99958 4.81097 3.99976H27.1862C27.2915 3.99958 27.3958 4.0201 27.4931 4.06017C27.5905 4.10023 27.6789 4.15904 27.7534 4.23324C27.8279 4.30743 27.8871 4.39556 27.9274 4.49257C27.9677 4.58958 27.9885 4.69357 27.9885 4.79859V28.0026L27.9871 43.2042Z" fill="currentColor"/><path d="M23.953 7.99817H8.02161V11.9994H23.953V7.99817Z" fill="currentColor"/><path d="M23.953 15.9879H8.02161V19.9891H23.953V15.9879Z" fill="currentColor"/><path d="M17.9802 35.9796H13.9688V39.9808H17.9802V35.9796Z" fill="currentColor"/></svg>',
+};
+
+function cardSection(title, node, icon) {
+  const s = document.createElement("div");
+  s.className = "card-section";
+  const h = document.createElement("h4");
+  h.innerHTML = (icon && ICONS[icon] ? `<span class="section-icon">${ICONS[icon]}</span>` : "") + esc(title);
+  s.appendChild(h);
+  s.appendChild(node);
+  return s;
+}
+
+function specsGrid(items) {
+  const g = document.createElement("div");
+  g.className = "specs-grid";
+  items.forEach(i => g.appendChild(i));
+  return g;
+}
+
+// Заглушка кнопки «Заказать»: сюда вешается реальное действие (переход, форма заявки и т.п.).
+// В лог уходит то же самое, что показано на карточке (запрошенные ресурсы, кластер,
+// оборудование, цена), плюс поле "Max CPU usage" из ответа /config, которое на самой
+// карточке пока не отображается.
+function buildOrderPayload(item, request) {
+  request = request || {};
+  const payload = {};
+
+  REQUESTED.forEach(r => {
+    let v = r.api && item[r.api] != null ? item[r.api] : request[r.param];
+    if (v === undefined || v === "") return;
+    let text = fmt(Number.isFinite(Number(v)) && !Array.isArray(v) ? Number(v) : v);
+    if (r.unit) text += " " + r.unit;
+    payload[r.label] = text;
+  });
+
+  if (item[HOSTS_KEY] != null) {
+    const label = item[REDUNDANCY_KEY] ? `Кол-во хостов (${item[REDUNDANCY_KEY]})` : "Кол-во хостов";
+    payload[label] = fmt(item[HOSTS_KEY]);
+  }
+  const raidVals = RAID_KEYS.map(k => item[k]).filter(v => v != null && v !== "").map(v => String(fmt(v)));
+  if (raidVals.length) {
+    const raid = raidVals.find(v => /raid/i.test(v));
+    const fttRaw = raidVals.find(v => v !== raid);
+    const n = fttRaw && (fttRaw.match(/\d+/) || [])[0];
+    payload["RAID / FTT"] = [raid, n ? `FTT-${n}` : fttRaw].filter(Boolean).join(", ");
+    payload["Тип vSAN"] = RAID_VALUE;
+  }
+
+  HW_KEYS.forEach(key => {
+    if (!(key in item)) return;
+    payload[fieldLabel(key)] = fmtHw(item[key]);
+  });
+
+  if (item[PRICE_KEY] != null) payload["Цена"] = fmt(item[PRICE_KEY]);
+  payload["Max CPU usage"] = item["Max CPU usage"];
+
+  // По просьбе — доступные ресурсы добавляются в конец лога отдельным блоком,
+  // на самой карточке они не показываются.
+  ["vCPU available", "vRAM available", "vSSD available", "vGPU available"].forEach(key => {
+    payload[key] = item[key];
+  });
+
+  return payload;
+}
+
+function onOrderClick(item, idx, request) {
+  console.log("Заказать конфигурацию", idx + 1, buildOrderPayload(item, request));
+}
+
+function renderResults(data, request) {
+  request = request || {};
   const wrap = document.getElementById("results-wrap");
   wrap.innerHTML = "";
 
@@ -453,40 +947,87 @@ function renderResults(data) {
   summary.textContent = `Получено вариантов: ${data.length}`;
   wrap.appendChild(summary);
 
-  data.forEach((item, idx) => {
-    const card = document.createElement("div");
-    card.className = "variant-card";
+  const grid = document.createElement("div");
+  grid.className = "cards-grid";
 
+  data.forEach((item, idx) => {
+    // бэкенд сортирует варианты по цене, поэтому первый — самый выгодный
+    const isBest = idx === 0 && data.length > 1;
+    const card = document.createElement("div");
+    card.className = "config-card" + (isBest ? " best" : "");
+
+    const price = item[PRICE_KEY] != null ? fmt(item[PRICE_KEY]) : "";
     const head = document.createElement("div");
-    head.className = "variant-head";
-    const titleParts = CARD_TITLE_KEYS.filter(k => item[k]).map(k => item[k]);
-    const vname = document.createElement("span");
-    vname.className = "vname";
-    vname.textContent = `Вариант ${idx + 1}` + (titleParts.length ? " — " + titleParts.join(" / ") : "");
-    const vprice = document.createElement("span");
-    vprice.className = "vprice";
-    vprice.textContent = item[PRICE_KEY] ?? "";
-    head.appendChild(vname);
-    head.appendChild(vprice);
+    head.className = "card-header";
+    head.innerHTML = `<div><h3 class="card-title">Конфигурация #${idx + 1}</h3>${isBest ? '<span class="vbadge">Лучшая цена</span>' : ""}</div>`
+      + `<div class="card-price"><div class="price-value">${esc(price)}</div>${PRICE_NOTE ? `<div class="price-note">${esc(PRICE_NOTE)}</div>` : ""}</div>`;
     card.appendChild(head);
 
-    const grid = document.createElement("div");
-    grid.className = "variant-grid";
-    Object.entries(item).forEach(([key, val]) => {
-      if (key === PRICE_KEY) return;
-      if (key === REDUNDANCY_KEY) return; // объединяется с HOSTS_KEY ниже
-
-      const field = document.createElement("div");
-      field.className = "vfield";
-      const label = (key === HOSTS_KEY && item[REDUNDANCY_KEY])
-        ? `${fieldLabel(key)} (${item[REDUNDANCY_KEY]})`
-        : fieldLabel(key);
-      field.innerHTML = `<span class="vlabel">${label}</span><span class="vvalue">${val}</span>`;
-      grid.appendChild(field);
+    // 📊 Запрошенные ресурсы
+    const req = [];
+    REQUESTED.forEach(r => {
+      let v = r.api && item[r.api] != null ? item[r.api] : request[r.param];
+      if (v === undefined || v === "") return;
+      let text = fmt(Number.isFinite(Number(v)) && !Array.isArray(v) ? Number(v) : v);
+      if (r.unit) text += " " + r.unit;
+      req.push(specItem(r.label, text, r.tip));
     });
-    card.appendChild(grid);
-    wrap.appendChild(card);
+    if (req.length) card.appendChild(cardSection("Запрошенные ресурсы", specsGrid(req), "resources"));
+
+    // 🖥️ Конфигурация кластера
+    const cl = [];
+    if (item[HOSTS_KEY] != null) {
+      const label = item[REDUNDANCY_KEY] ? `Кол-во хостов (${item[REDUNDANCY_KEY]})` : "Кол-во хостов";
+      cl.push(specItem(label, fmt(item[HOSTS_KEY])));
+    }
+    const raidVals = RAID_KEYS.map(k => item[k]).filter(v => v != null && v !== "").map(v => String(fmt(v)));
+    if (raidVals.length) {
+      const raid = raidVals.find(v => /raid/i.test(v));
+      const fttRaw = raidVals.find(v => v !== raid);
+      const n = fttRaw && (fttRaw.match(/\d+/) || [])[0];
+      const fttText = n ? `FTT-${n}` : fttRaw;
+      const tip = n ? `Failures To Tolerate = ${n}. Конфигурация допускает одновременный отказ до ${n} дисков или узлов кластера без потери данных и доступности сервисов.` : undefined;
+
+      // Расположение: сверху ALL FLASH VSAN, снизу RAID и FTT (подсказка на FTT).
+      // Стиль при этом как у обычного spec-item — сверху мельче, снизу крупнее,
+      // поэтому классы .spec-label/.spec-value привязаны не к смыслу поля,
+      // а к позиции: верхняя строка мелкая, нижняя — крупная.
+      const d = document.createElement("div");
+      d.className = "spec-item";
+      const fttHtml = fttText
+        ? (tip
+            ? `<span class="tooltip" tabindex="0">${esc(fttText)}<span class="tooltip-text">${esc(tip)}</span></span>`
+            : esc(fttText))
+        : "";
+      d.innerHTML = `<span class="spec-label">${esc(RAID_VALUE)}</span>`
+        + `<span class="spec-value">${[raid ? esc(raid) : "", fttHtml].filter(Boolean).join(", ")}</span>`;
+      cl.push(d);
+    }
+    if (cl.length) card.appendChild(cardSection("Конфигурация кластера", specsGrid(cl), "cluster"));
+
+    // ⚙️ Спецификация оборудования
+    const ul = document.createElement("ul");
+    ul.className = "hw-list";
+    HW_KEYS.forEach(key => {
+      if (!(key in item)) return;
+      const li = document.createElement("li");
+      li.innerHTML = `<span><b>${esc(fieldLabel(key))}:</b> ${esc(fmtHw(item[key]))}</span>`;
+      ul.appendChild(li);
+    });
+    if (ul.children.length) card.appendChild(cardSection("Спецификация оборудования", ul, "hardware"));
+
+    const foot = document.createElement("div");
+    foot.className = "card-footer";
+    const btn = document.createElement("button");
+    btn.className = "btn-order";
+    btn.textContent = "Заказать";
+    btn.addEventListener("click", () => onOrderClick(item, idx, request));
+    foot.appendChild(btn);
+    card.appendChild(foot);
+
+    grid.appendChild(card);
   });
+  wrap.appendChild(grid);
 }
 
 async function executeRequest() {
@@ -529,7 +1070,7 @@ async function executeRequest() {
 
     statusEl.textContent = `200 OK`;
     statusEl.className = "status-inline ok";
-    renderResults(data);
+    renderResults(data, values);
   } catch (e) {
     statusEl.textContent = "Не удалось выполнить запрос: " + e.message;
     statusEl.className = "status-inline err";

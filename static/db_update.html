@@ -174,49 +174,73 @@
       background: #fff;
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 4px 0;
     }
+    /* ---- таблица данных: вид как в Excel — тонкая сетка на все ячейки,
+       поля ввода без собственных рамок (сливаются с ячейкой),
+       подсвечивается только активная ячейка ---- */
     .data-table {
-      width: 100%;
+      width: auto;
+      min-width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 12.5px;
+    }
+    .data-table th,
+    .data-table td {
+      border: 1px solid #d4d4d4;
+      padding: 0;
     }
     .data-table th {
-      background: #f7f8fa;
+      background: #f3f2f1;
       color: var(--text);
       font-weight: 600;
-      padding: 10px 8px;
+      padding: 6px 8px;
       text-align: left;
-      border-bottom: 2px solid var(--border);
       white-space: nowrap;
-    }
-    .data-table td {
-      padding: 4px 8px;
-      border-bottom: 1px solid #f0f1f3;
-      vertical-align: middle;
+      position: sticky;
+      top: 0;
     }
     .data-table td input {
+      display: block;
       width: 100%;
       min-width: 60px;
-      padding: 6px 4px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      box-sizing: border-box;
+      padding: 4px 6px;
+      border: none;
+      border-radius: 0;
       font-family: var(--mono);
-      font-size: 13px;
+      font-size: 12.5px;
       background: transparent;
-      transition: border 0.2s;
+      color: var(--text);
     }
     .data-table td input:focus {
-      border-color: var(--blue);
-      outline: none;
-      background: #fefefe;
+      outline: 2px solid var(--blue);
+      outline-offset: -2px;
+      background: #eaf2fd;
+      position: relative;
+      z-index: 1;
     }
     .data-table td input[readonly] {
-      background: #f0f1f3;
-      cursor: default;
+      background: #f7f7f7;
+      color: var(--muted);
+    }
+    /* убираем спин-стрелки у числовых полей — они отъедают ширину ячейки
+       и обрезают видимую часть числа (см. скрин с "1206…" под стрелками) */
+    .data-table td input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    .data-table td input[type="number"]::-webkit-outer-spin-button,
+    .data-table td input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .data-table td.bool-cell {
+      text-align: center;
     }
     .data-table tr.new-row td {
       background: #fffceb;
+    }
+    .data-table tr.new-row td input {
+      background: transparent;
     }
     .row-actions {
       text-align: center;
@@ -468,6 +492,43 @@
     return (pkColumn.type || '').toLowerCase().includes('int');
   }
 
+  // Шрифт инпутов в таблице — должен совпадать с .data-table td input
+  // в CSS выше (var(--mono), 12.5px), иначе замер разъедется с реальной
+  // отрисовкой.
+  const CELL_FONT = "12.5px 'Source Code Pro', 'SFMono-Regular', Consolas, Menlo, monospace";
+  let _measureCanvas = null;
+
+  function measureTextWidthPx(text) {
+    if (!_measureCanvas) _measureCanvas = document.createElement('canvas');
+    const ctx = _measureCanvas.getContext('2d');
+    ctx.font = CELL_FONT;
+    return ctx.measureText(String(text ?? '')).width;
+  }
+
+  // Ширина колонки в пикселях — максимум среди РЕАЛЬНОЙ ширины отрисовки
+  // всех значений этой колонки (включая заголовок), замеренной тем же
+  // шрифтом, что и в инпутах. В отличие от подсчёта "по количеству
+  // символов" (ch) или расчёта на HTML-атрибут size — тут нет приближения:
+  // мы напрямую узнаём, сколько пикселей займёт самый длинный текст, и
+  // задаём инпутам ровно столько + запас под паддинги/курсор. Одна и та
+  // же ширина применяется ко всем строкам колонки — короткие/пустые
+  // значения не сжимаются отдельно от остальных.
+  function computeColumnWidthsPx() {
+    const widths = {};
+    currentColumns.forEach(col => {
+      let maxPx = measureTextWidthPx(col.name);
+      currentData.forEach(row => {
+        const value = row[col.name];
+        if (value !== undefined && value !== null && value !== '') {
+          maxPx = Math.max(maxPx, measureTextWidthPx(value));
+        }
+      });
+      // +24px — паддинги инпута (4px*2) и небольшой запас под курсор
+      widths[col.name] = Math.max(60, Math.min(Math.ceil(maxPx) + 24, 640));
+    });
+    return widths;
+  }
+
   // ================== Отрисовка редактируемой таблицы ==================
   function renderTable() {
     if (!currentColumns.length) {
@@ -477,6 +538,7 @@
 
     const pkColumn = getPkColumn();
     const pkAuto = isPkAuto(pkColumn);
+    const colWidthsPx = computeColumnWidthsPx();
 
     let html = '<table class="data-table"><thead><tr>';
     currentColumns.forEach(col => {
@@ -519,7 +581,7 @@
 
         if (isBool) {
           const checked = ['1', 'true', 'on', 'yes'].includes(String(value).toLowerCase());
-          html += `<td>
+          html += `<td class="bool-cell">
             <input type="checkbox"
                    ${checked ? 'checked' : ''}
                    data-row-key="${rowIdx}"
@@ -529,10 +591,12 @@
             >
           </td>`;
         } else {
+          const widthPx = colWidthsPx[col.name];
           html += `<td>
             <input type="${readonly ? 'text' : inputType}"
                    value="${escapeHtml(String(value))}"
                    placeholder="${escapeHtml(placeholder)}"
+                   style="width:${widthPx}px"
                    data-row-key="${rowIdx}"
                    data-col-name="${escapeHtml(col.name)}"
                    ${readonly ? 'readonly' : ''}
@@ -640,11 +704,16 @@
     }
 
     const toUpdate = [];
-    const toCreate = [];
+    // Каждый элемент — { draft, values }: держим ссылку на сам объект-черновик
+    // из currentData (не только его rowIdx), чтобы после перезагрузки таблицы
+    // с сервера можно было вернуть в currentData именно те черновики, что не
+    // сохранились — не по индексу (он после reload будет уже про другие
+    // строки), а по идентичности объекта.
+    const draftsToCreate = [];
     gathered.forEach(({ rowIdx, values }) => {
       const sourceRow = currentData[rowIdx];
       if (sourceRow && sourceRow._isNew) {
-        toCreate.push(values);
+        draftsToCreate.push({ draft: sourceRow, values });
       } else {
         toUpdate.push(values);
       }
@@ -657,6 +726,7 @@
     let updatedCount = 0;
     let createdCount = 0;
     const errors = [];
+    const failedDrafts = [];
 
     // 1) существующие строки — одним запросом, как раньше
     if (toUpdate.length > 0) {
@@ -671,8 +741,10 @@
       }
     }
 
-    // 2) новые строки — по одной, чтобы ошибка в одной не блокировала остальные
-    for (const values of toCreate) {
+    // 2) новые строки — по одной, чтобы ошибка в одной не блокировала остальные.
+    // Черновик, который не удалось создать, запоминаем в failedDrafts — его
+    // введённые значения не должны пропасть с экрана.
+    for (const { draft, values } of draftsToCreate) {
       try {
         await fetchJSON(`${API_BASE}/table/${currentTableName}/rows`, {
           method: 'POST',
@@ -681,7 +753,25 @@
         createdCount += 1;
       } catch (err) {
         errors.push(`создание строки: ${err.message}`);
+        // Обновляем черновик введёнными значениями (пользователь мог менять
+        // их прямо перед сохранением) — чтобы после восстановления в таблице
+        // он увидел ровно то, что вводил, а не исходные пустые поля.
+        Object.assign(draft, values);
+        failedDrafts.push(draft);
       }
+    }
+
+    // Перезагружаем таблицу, чтобы получить свежее состояние с сервера —
+    // это заменяет currentData целиком, поэтому все несохранённые черновики
+    // (включая failedDrafts) на секунду пропадают из currentData.
+    await loadTableData(currentTableName);
+
+    // Возвращаем в currentData черновики, которые не удалось сохранить —
+    // иначе пользователь молча теряет всё, что успел ввести в новую строку.
+    if (failedDrafts.length > 0) {
+      currentData.push(...failedDrafts);
+      renderTable();
+      addRowBtn.disabled = !currentColumns.length;
     }
 
     if (errors.length === 0) {
@@ -689,12 +779,9 @@
       showStatus(`Сохранено: обновлено ${updatedCount}, создано ${createdCount}`);
     } else {
       showToast(`⚠️ Сохранено частично (${errors.length} ошибок) — см. статус`, true);
-      showStatus(`Ошибки: ${errors.join('; ')}`, true);
+      showStatus(`Ошибки: ${errors.join('; ')}. Несохранённые строки оставлены на экране.`, true);
       console.error(errors);
     }
-
-    // Перезагружаем таблицу, чтобы получить свежее состояние с сервера
-    await loadTableData(currentTableName);
   }
 
   // ================== Обработчики событий ==================
