@@ -427,11 +427,11 @@ function optionLabel(value) {
 
 const PARAMS = [
   { name:"works_main", label:"Тип ЧО", type:"enum", required:true, options:[], value:"" },
-  { name:"vcpu", label:"vCPU", hint:"количество виртуальных ядер", type:"integer", required:true, min:1, value:390 },
-  { name:"vram", label:"vRAM, ГБ", hint:"объём виртуальной памяти", type:"integer", required:true, min:1, value:2000 },
+  { name:"vcpu", label:"vCPU", hint:"количество виртуальных ядер", type:"integer", required:true, min:1, value:400 },
+  { name:"vram", label:"vRAM, ГБ", hint:"объём виртуальной памяти", type:"integer", required:true, min:1, value:1000 },
   { name:"vssd", label:"vSSD, ГБ", hint:"объём дискового пространства", type:"integer", required:true, min:1, value:22000 },
   { name:"vgpu", label:"vGPU, ГБ", hint:"объём видеопамяти", type:"integer", required:false, min:0, value:0 },
-  { name:"cpu_min_frequency", label:"Мин. частота CPU, МГц", type:"integer", required:true, min:1, value:3600 },
+  { name:"cpu_min_frequency", label:"Мин. частота CPU, МГц", type:"integer", required:true, min:1, value:2000 },
   { name:"cpu_overcommit", label:"CPU overcommit", hint:"коэффициент переподписки CPU", type:"number", required:true, min:1, value:1, step:1 },
   { name:"cpu_vendor", label:"Вендор CPU", type:"enum", required:true, options:[], value:"" },
   // { name:"vsan_type", label:"Тип vSAN", type:"enum", required:true, options:["osa","esa"], value:"osa" },
@@ -478,7 +478,7 @@ const VDI_RESOURCE_FIELDS = [
 ];
 
 const VDI_PROFILES = [
-  { name:"Рабочий стол 1", vcpu:4,  vram:8, vssd:200, vgpu:0, count:10 },
+  { name:"Рабочий стол 1", vcpu:4,  vram:8, vssd:200, vgpu:0, count:100 },
   { name:"Рабочий стол 2", vcpu:6,  vram:24, vssd:200, vgpu:0, count:0 },
   { name:"Рабочий стол 3", vcpu:8,  vram:48, vssd:200, vgpu:0, count:0 },
   { name:"Рабочий стол 4", vcpu:12, vram:64, vssd:200, vgpu:0, count:0 },
