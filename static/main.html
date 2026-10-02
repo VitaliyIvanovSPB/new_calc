@@ -921,8 +921,52 @@ function buildOrderPayload(item, request) {
   return payload;
 }
 
-function onOrderClick(item, idx, request) {
-  console.log("Заказать конфигурацию", idx + 1, buildOrderPayload(item, request));
+// Текстовое представление объекта для буфера обмена: "Подпись: значение" по
+// строкам, в том же порядке, в каком поля собраны в buildOrderPayload.
+function payloadToText(payload) {
+  return Object.entries(payload)
+    .map(([label, value]) => `${label}: ${value}`)
+    .join("\n");
+}
+
+async function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      // идём в запасной вариант ниже (например, страница открыта не по https)
+    }
+  }
+  // Запасной вариант для браузеров/контекстов без Clipboard API.
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function onOrderClick(item, idx, request, btn) {
+  const text = payloadToText(buildOrderPayload(item, request));
+  const ok = await copyToClipboard(text);
+
+  if (!btn) return;
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = ok ? "Скопировано ✓" : "Не удалось скопировать";
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.disabled = false;
+  }, 1500);
 }
 
 function renderResults(data, request) {
@@ -1020,8 +1064,8 @@ function renderResults(data, request) {
     foot.className = "card-footer";
     const btn = document.createElement("button");
     btn.className = "btn-order";
-    btn.textContent = "Заказать";
-    btn.addEventListener("click", () => onOrderClick(item, idx, request));
+    btn.textContent = "Копировать";
+    btn.addEventListener("click", () => onOrderClick(item, idx, request, btn));
     foot.appendChild(btn);
     card.appendChild(foot);
 
