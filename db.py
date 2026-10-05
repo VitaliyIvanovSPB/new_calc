@@ -11,7 +11,7 @@ DB_PATH = Path(__file__).parent / "data.db"
 def _connect() -> sqlite3.Connection:
     """Единая точка открытия соединения — чтобы timeout/WAL не разъезжались
     по разным местам файла, если понадобится поменять настройки."""
-    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.execute("PRAGMA journal_mode=WAL")
     return conn
 

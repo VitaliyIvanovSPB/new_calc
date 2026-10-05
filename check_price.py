@@ -29,6 +29,7 @@ parameters_float (колонки id, name, value — по одной строк�
 """
 
 import json
+import os
 import logging
 import sqlite3
 import sys
@@ -39,7 +40,7 @@ from pathlib import Path
 # НАСТРОЙКИ — поправьте под свой проект перед первым запуском
 # ----------------------------------------------------------------------------
 
-DB_PATH = Path(__file__).parent / "data.db"
+DB_PATH = os.environ.get("DB_PATH", "data.db")
 API_URL = "https://api.selectel.ru/servers/v2/pub/calculator/items"
 LOG_PATH =  Path(__file__).parent / "update_prices.log"
 REQUEST_TIMEOUT = 30                         
@@ -214,7 +215,7 @@ def main() -> None:
 
     items_by_id = fetch_catalog()
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     try:
         single_tables, dual_tables = discover_seido_tables(conn)
         params = load_parameters(conn)
